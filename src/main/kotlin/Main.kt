@@ -2,6 +2,8 @@ import java.io.File
 import java.io.InputStreamReader
 import kotlin.system.exitProcess
 
+var hadError = false
+
 fun main(args: Array<String>) {
   if (args.size > 1) {
     println("Usage: klox [script]")
@@ -16,6 +18,9 @@ fun main(args: Array<String>) {
 fun runFile(path: String) {
   val bytes: ByteArray = File(path).readBytes()
   run(String(bytes, Charsets.UTF_8))
+
+  // Indicate an error in the exit code.
+  if (hadError) exitProcess(65)
 }
 
 fun runPrompt() {
@@ -25,9 +30,25 @@ fun runPrompt() {
     print("> ")
     val line = bufferedReader.readLine() ?: break
     run(line)
+    hadError = false
   }
 }
 
-fun run(code: String) {
-  println("Should execute `$code`")
+fun run(source: String) {
+  val scanner = Scanner(source)
+  val tokens = scanner.scanTokens()
+
+  // For now, just print the tokens.
+  for (token in tokens) {
+    println(token.toString())
+  }
+}
+
+private fun report(line: Int, where: String, message: String) {
+  println("[line $line] Error $where: $message")
+  hadError = true
+}
+
+fun error(line: Int, message: String) {
+  report(line, "", message)
 }
