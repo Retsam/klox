@@ -20,6 +20,10 @@ class Scanner(val code: String) {
     if (isAtEnd()) return '\u0000'
     return code[current]
   }
+  private fun peek2(): Char {
+    if (current + 1 >= code.length) return '\u0000'
+    return code[current + 1]
+  }
 
   private fun match(char: Char): Boolean {
     if (peek() == char) {
@@ -84,7 +88,7 @@ class Scanner(val code: String) {
     while (!isAtEnd()) {
       when (val ch = advance()) {
         '"' -> {
-          addToken(TokenType.STRING, code.substring(start, current))
+          addToken(TokenType.STRING, code.substring(start + 1, current - 1))
           return
         }
         '\n' -> {
@@ -98,7 +102,7 @@ class Scanner(val code: String) {
   private fun number() {
     while (!isAtEnd()) {
       val ch = peek()
-      if (ch in '0'..'9' || ch == '.') {
+      if (isDigit(ch) || (ch == '.' && isDigit(peek2()))) {
         advance()
         continue
       }
