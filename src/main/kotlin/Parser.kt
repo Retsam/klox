@@ -38,9 +38,18 @@ class Parser(private val tokens: List<Token>) {
     }
   }
 
-  // expression     → equality ;
+  // expression     → expressions ;
   private fun expression(): Expr {
-    return equality()
+    return expressions()
+  }
+
+  // expressions       → (equality  ,)* equality ;
+  private fun expressions(): Expr {
+    var expr = equality()
+    if (match(TokenType.COMMA)) {
+      return Binary(expr, previous(), expressions())
+    }
+    return expr
   }
 
   // equality       → comparison ( ( "!=" | "==" ) comparison )* ;
