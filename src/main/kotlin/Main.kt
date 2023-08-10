@@ -1,6 +1,7 @@
 import java.io.File
 import java.io.InputStreamReader
 import kotlin.system.exitProcess
+import misc.prettyPrint
 
 var hadError = false
 
@@ -42,11 +43,22 @@ fun run(source: String) {
   for (token in tokens) {
     println(token.toString())
   }
+
+  val expr = Parser(tokens).parse() ?: return
+  println(prettyPrint(expr))
 }
 
 private fun report(line: Int, where: String, message: String) {
   println("[line $line] Error $where: $message")
   hadError = true
+}
+
+fun tokenError(token: Token, message: String) {
+  if (token.type == TokenType.EOF) {
+    report(token.line, " at end", message)
+  } else {
+    report(token.line, " at '${token.lexeme}'", message)
+  }
 }
 
 fun error(line: Int, message: String) {
