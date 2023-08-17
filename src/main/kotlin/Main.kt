@@ -1,9 +1,11 @@
 import java.io.File
 import java.io.InputStreamReader
 import kotlin.system.exitProcess
-import misc.prettyPrint
 
 var hadError = false
+var hadRuntimeError = false
+
+val interpreter = Interpreter()
 
 fun main(args: Array<String>) {
   if (args.size > 1) {
@@ -22,6 +24,7 @@ fun runFile(path: String) {
 
   // Indicate an error in the exit code.
   if (hadError) exitProcess(65)
+  if (hadRuntimeError) exitProcess(70)
 }
 
 fun runPrompt() {
@@ -39,13 +42,8 @@ fun run(source: String) {
   val scanner = Scanner(source)
   val tokens = scanner.scanTokens()
 
-  // For now, just print the tokens.
-  for (token in tokens) {
-    println(token.toString())
-  }
-
   val expr = Parser(tokens).parse() ?: return
-  println(prettyPrint(expr))
+  interpreter.interpret(expr)
 }
 
 private fun report(line: Int, where: String, message: String) {
@@ -59,6 +57,11 @@ fun tokenError(token: Token, message: String) {
   } else {
     report(token.line, " at '${token.lexeme}'", message)
   }
+}
+
+fun runtimeError(error: Interpreter.RuntimeError) {
+  System.err.println(error.message + "\n[line " + error.token.line + "]")
+  hadRuntimeError = true
 }
 
 fun error(line: Int, message: String) {
