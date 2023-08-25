@@ -1,8 +1,9 @@
 class Interpreter {
-  fun interpret(expr: Expr) {
+  fun interpret(statements: List<Stmt>) {
     try {
-      val value = evaluate(expr)
-      println(stringify(value))
+      for (stmt in statements) {
+        execute(stmt)
+      }
     } catch (e: RuntimeError) {
       runtimeError(e)
     }
@@ -19,7 +20,25 @@ class Interpreter {
           str
         }
       }
+
       else -> obj.toString()
+    }
+  }
+
+  private fun execute(stmt: Stmt) {
+    when (stmt) {
+      is ExpressionStmt -> {
+        evaluate(stmt.expr)
+      }
+
+      is PrintStmt -> {
+        val value = evaluate(stmt.expr)
+        println(stringify(value))
+      }
+
+//      is AssignStmt -> {
+//        val value = evaluate(stmt.expr)
+//      }
     }
   }
 
@@ -37,12 +56,15 @@ class Interpreter {
       TokenType.MINUS -> {
         checkNumericOperand(operator, left) - checkNumericOperand(operator, right)
       }
+
       TokenType.SLASH -> {
         checkNumericOperand(operator, left) / checkNumericOperand(operator, right)
       }
+
       TokenType.STAR -> {
         checkNumericOperand(operator, left) * checkNumericOperand(operator, right)
       }
+
       TokenType.PLUS -> {
         when {
           left is Double && right is Double -> left + right
@@ -50,40 +72,51 @@ class Interpreter {
           else -> throw RuntimeError(operator, "Operands must be two numbers or two strings.")
         }
       }
+
       TokenType.GREATER -> {
         checkNumericOperand(operator, left) > checkNumericOperand(operator, right)
       }
+
       TokenType.GREATER_EQUAL -> {
         checkNumericOperand(operator, left) >= checkNumericOperand(operator, right)
       }
+
       TokenType.LESS -> {
         checkNumericOperand(operator, left) < checkNumericOperand(operator, right)
       }
+
       TokenType.LESS_EQUAL -> {
         checkNumericOperand(operator, left) <= checkNumericOperand(operator, right)
       }
+
       TokenType.EQUAL_EQUAL -> {
         left == right
       }
+
       TokenType.BANG_EQUAL -> {
         left != right
       }
+
       TokenType.COMMA -> {
         right
       }
+
       else -> {
         throw RuntimeError(operator, "Binary operator not supported.")
       }
     }
   }
+
   private fun unaryOperation(operator: Token, right: Any?): Any {
     return when (operator.type) {
       TokenType.MINUS -> {
         -checkNumericOperand(operator, right)
       }
+
       TokenType.BANG -> {
         !isTruthy(right)
       }
+
       else -> {
         throw RuntimeError(operator, "Unary operator not supported.")
       }

@@ -7,3 +7,10 @@ class Grouping(val expression: Expr) : Expr
 class Literal(val value: Any?) : Expr
 
 class Unary(val operator: Token, val right: Expr) : Expr
+
+
+sealed interface Stmt
+
+class ExpressionStmt(val expr: Expr) : Stmt;
+//class AssignStmt(val identifier: Token, val expr: Expr) : Stmt;
+class PrintStmt(val expr: Expr) : Stmt;

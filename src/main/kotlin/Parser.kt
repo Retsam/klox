@@ -1,11 +1,11 @@
 class Parser(private val tokens: List<Token>) {
   private var current = 0
 
-  fun parse(): Expr? {
+  fun parse(): List<Stmt> {
     return try {
-      expression()
+      program()
     } catch (e: ParseError) {
-      null
+      ArrayList()
     }
   }
 
@@ -37,6 +37,39 @@ class Parser(private val tokens: List<Token>) {
     if (!match(type)) {
       throw error(peek(), message)
     }
+  }
+
+  // program → (declaration;)*
+  private fun program(): List<Stmt> {
+    val statements = ArrayList<Stmt>()
+    while (!isAtEnd()) {
+      statements += declaration()
+    }
+    return statements
+  }
+
+  // declaration → (IDENTIFIER = expression) | statement
+  private fun declaration(): Stmt {
+//    if (match(TokenType.VAR)) {
+//      val id = peek()
+//      if (id.type != TokenType.IDENTIFIER) {
+//        throw error(id, "Expected an identifier")
+//      }
+//      return AssignStmt(id, expression())
+//    }
+    return statement()
+  }
+
+  // statement → "print(" expression ")" | expression
+  private fun statement(): Stmt {
+    if (match(TokenType.PRINT)) {
+      val expr = expression()
+      consume(TokenType.SEMICOLON, "Expected ';' after value")
+      return PrintStmt(expr)
+    }
+    val expr = expression();
+    consume(TokenType.SEMICOLON, "Expected ';' after value")
+    return ExpressionStmt(expr);
   }
 
   // expression     → expressions ;

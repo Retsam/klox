@@ -42,7 +42,7 @@ fun run(source: String) {
   val scanner = Scanner(source)
   val tokens = scanner.scanTokens()
 
-  val expr = Parser(tokens).parse() ?: return
+  val expr = Parser(tokens).parse()
   interpreter.interpret(expr)
 }
 
