@@ -1,4 +1,4 @@
-class Scanner(val code: String) {
+class Scanner(private val code: String) {
   private var start = 0
   private var current = 0
   private var line = 1
@@ -20,6 +20,7 @@ class Scanner(val code: String) {
     if (isAtEnd()) return '\u0000'
     return code[current]
   }
+
   private fun peek2(): Char {
     if (current + 1 >= code.length) return '\u0000'
     return code[current + 1]
@@ -38,8 +39,7 @@ class Scanner(val code: String) {
   }
 
   private fun scanToken() {
-    val char = advance()
-    when (char) {
+    when (val char = advance()) {
       '(' -> addToken(TokenType.LEFT_PAREN)
       ')' -> addToken(TokenType.RIGHT_PAREN)
       '{' -> addToken(TokenType.LEFT_BRACE)
@@ -61,15 +61,18 @@ class Scanner(val code: String) {
         }
         addToken(TokenType.SLASH)
       }
+
       ' ',
       '\r',
       '\t' -> {
         return
       }
+
       '\n' -> {
         line++
         return
       }
+
       '"' -> string()
       in '0'..'9' -> number()
       else -> {
@@ -86,11 +89,12 @@ class Scanner(val code: String) {
 
   private fun string() {
     while (!isAtEnd()) {
-      when (val ch = advance()) {
+      when (advance()) {
         '"' -> {
           addToken(TokenType.STRING, code.substring(start + 1, current - 1))
           return
         }
+
         '\n' -> {
           line++
         }
@@ -120,9 +124,11 @@ class Scanner(val code: String) {
   private fun isAlpha(char: Char): Boolean {
     return char in 'a'..'z' || char in 'A'..'Z' || char == '_'
   }
+
   private fun isDigit(char: Char): Boolean {
     return char in '0'..'9'
   }
+
   private fun isAlphaNumeric(char: Char): Boolean {
     return isAlpha(char) || isDigit(char)
   }

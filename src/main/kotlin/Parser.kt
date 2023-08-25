@@ -2,16 +2,17 @@ class Parser(private val tokens: List<Token>) {
   private var current = 0
 
   fun parse(): Expr? {
-    try {
-      return expression()
+    return try {
+      expression()
     } catch (e: ParseError) {
-      return null
+      null
     }
   }
 
   private fun isAtEnd(): Boolean {
     return peek().type == TokenType.EOF
   }
+
   private fun advance() {
     current += 1
   }
@@ -45,7 +46,7 @@ class Parser(private val tokens: List<Token>) {
 
   // expressions       → (equality  ,)* equality ;
   private fun expressions(): Expr {
-    var expr = equality()
+    val expr = equality()
     if (match(TokenType.COMMA)) {
       return Binary(expr, previous(), expressions())
     }
@@ -67,13 +68,15 @@ class Parser(private val tokens: List<Token>) {
   private fun comparison(): Expr {
     var expr = term()
     while (match(
-        TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
+          TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL,
+      )) {
       val operator = previous()
       val right = term()
       expr = Binary(expr, operator, right)
     }
     return expr
   }
+
   // term           → factor ( ( "-" | "+" ) factor )* ;
   private fun term(): Expr {
     var expr = factor()
@@ -84,6 +87,7 @@ class Parser(private val tokens: List<Token>) {
     }
     return expr
   }
+
   // factor         → unary ( ( "/" | "*" ) unary )* ;
   private fun factor(): Expr {
     var expr = unary()
@@ -94,6 +98,7 @@ class Parser(private val tokens: List<Token>) {
     }
     return expr
   }
+
   // unary          → ( "!" | "-" ) unary
   //               | primary ;
   private fun unary(): Expr {
@@ -104,6 +109,7 @@ class Parser(private val tokens: List<Token>) {
     }
     return primary()
   }
+
   // primary        → NUMBER | STRING | "true" | "false" | "nil"
   //               | "(" expression ")" ;
   private fun primary(): Expr {
@@ -117,6 +123,7 @@ class Parser(private val tokens: List<Token>) {
         consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
         Grouping(expr)
       }
+
       else -> {
         throw error(peek(), "Expected expression.")
       }
@@ -130,6 +137,7 @@ class Parser(private val tokens: List<Token>) {
     tokenError(token, message)
     return ParseError()
   }
+
   private fun synchronize() {
     advance()
     while (!isAtEnd()) {
@@ -143,6 +151,7 @@ class Parser(private val tokens: List<Token>) {
         TokenType.WHILE,
         TokenType.PRINT,
         TokenType.RETURN -> return
+
         else -> {}
       }
     }
