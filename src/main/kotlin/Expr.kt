@@ -8,9 +8,12 @@ class Literal(val value: Any?) : Expr
 
 class Unary(val operator: Token, val right: Expr) : Expr
 
+class Variable(val name: Token) : Expr
 
 sealed interface Stmt
 
-class ExpressionStmt(val expr: Expr) : Stmt;
-//class AssignStmt(val identifier: Token, val expr: Expr) : Stmt;
-class PrintStmt(val expr: Expr) : Stmt;
+class ExpressionStmt(val expr: Expr) : Stmt
+
+class VarStmt(val identifier: Token, val expr: Expr) : Stmt
+
+class PrintStmt(val expr: Expr) : Stmt

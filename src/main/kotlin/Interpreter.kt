@@ -1,4 +1,20 @@
+class Environment {
+  private val values = HashMap<String, Any?>()
+
+  fun define(name: String, value: Any?) {
+    values[name] = value
+  }
+
+  fun get(name: Token): Any? {
+    if (values.containsKey(name.lexeme)) {
+      return values[name.lexeme]
+    }
+    throw Interpreter.RuntimeError(name, "Undefined variable '${name.lexeme}'.")
+  }
+}
+
 class Interpreter {
+  private val environment = Environment()
   fun interpret(statements: List<Stmt>) {
     try {
       for (stmt in statements) {
@@ -20,7 +36,6 @@ class Interpreter {
           str
         }
       }
-
       else -> obj.toString()
     }
   }
@@ -30,15 +45,14 @@ class Interpreter {
       is ExpressionStmt -> {
         evaluate(stmt.expr)
       }
-
       is PrintStmt -> {
         val value = evaluate(stmt.expr)
         println(stringify(value))
       }
-
-//      is AssignStmt -> {
-//        val value = evaluate(stmt.expr)
-//      }
+      is VarStmt -> {
+        val value = evaluate(stmt.expr)
+        environment.define(stmt.identifier.lexeme, value)
+      }
     }
   }
 
@@ -47,6 +61,7 @@ class Interpreter {
       is Binary -> binaryOperation(evaluate(expr.left), expr.operator, evaluate(expr.right))
       is Grouping -> evaluate(expr.expression)
       is Literal -> expr.value
+      is Variable -> environment.get(expr.name)
       is Unary -> unaryOperation(expr.operator, evaluate(expr.right))
     }
   }
@@ -56,15 +71,12 @@ class Interpreter {
       TokenType.MINUS -> {
         checkNumericOperand(operator, left) - checkNumericOperand(operator, right)
       }
-
       TokenType.SLASH -> {
         checkNumericOperand(operator, left) / checkNumericOperand(operator, right)
       }
-
       TokenType.STAR -> {
         checkNumericOperand(operator, left) * checkNumericOperand(operator, right)
       }
-
       TokenType.PLUS -> {
         when {
           left is Double && right is Double -> left + right
@@ -72,35 +84,27 @@ class Interpreter {
           else -> throw RuntimeError(operator, "Operands must be two numbers or two strings.")
         }
       }
-
       TokenType.GREATER -> {
         checkNumericOperand(operator, left) > checkNumericOperand(operator, right)
       }
-
       TokenType.GREATER_EQUAL -> {
         checkNumericOperand(operator, left) >= checkNumericOperand(operator, right)
       }
-
       TokenType.LESS -> {
         checkNumericOperand(operator, left) < checkNumericOperand(operator, right)
       }
-
       TokenType.LESS_EQUAL -> {
         checkNumericOperand(operator, left) <= checkNumericOperand(operator, right)
       }
-
       TokenType.EQUAL_EQUAL -> {
         left == right
       }
-
       TokenType.BANG_EQUAL -> {
         left != right
       }
-
       TokenType.COMMA -> {
         right
       }
-
       else -> {
         throw RuntimeError(operator, "Binary operator not supported.")
       }
@@ -112,11 +116,9 @@ class Interpreter {
       TokenType.MINUS -> {
         -checkNumericOperand(operator, right)
       }
-
       TokenType.BANG -> {
         !isTruthy(right)
       }
-
       else -> {
         throw RuntimeError(operator, "Unary operator not supported.")
       }

@@ -33,43 +33,51 @@ class Parser(private val tokens: List<Token>) {
     return false
   }
 
-  private fun consume(type: TokenType, message: String) {
-    if (!match(type)) {
+  private fun consume(type: TokenType, message: String): Token {
+    val token = peek()
+    if (type != token.type) {
       throw error(peek(), message)
     }
+    advance()
+    return token
   }
 
   // program → (declaration;)*
   private fun program(): List<Stmt> {
     val statements = ArrayList<Stmt>()
     while (!isAtEnd()) {
-      statements += declaration()
+      declaration()?.let { statements.add(it) }
     }
     return statements
   }
 
   // declaration → (IDENTIFIER = expression) | statement
-  private fun declaration(): Stmt {
-//    if (match(TokenType.VAR)) {
-//      val id = peek()
-//      if (id.type != TokenType.IDENTIFIER) {
-//        throw error(id, "Expected an identifier")
-//      }
-//      return AssignStmt(id, expression())
-//    }
-    return statement()
+  private fun declaration(): Stmt? {
+    try {
+      if (match(TokenType.VAR)) {
+        val id = consume(TokenType.IDENTIFIER, "Expected an identifier")
+        consume(TokenType.EQUAL, "Expected '=' after identifier")
+        val expr = expression()
+        consume(TokenType.SEMICOLON, "Expected ';' after statement")
+        return VarStmt(id, expr)
+      }
+      val stmt = statement()
+      consume(TokenType.SEMICOLON, "Expected ';' after statement")
+      return stmt
+    } catch (e: ParseError) {
+      if (!isAtEnd()) {
+        synchronize()
+      }
+      return null
+    }
   }
 
   // statement → "print(" expression ")" | expression
   private fun statement(): Stmt {
     if (match(TokenType.PRINT)) {
-      val expr = expression()
-      consume(TokenType.SEMICOLON, "Expected ';' after value")
-      return PrintStmt(expr)
+      return PrintStmt(expression())
     }
-    val expr = expression();
-    consume(TokenType.SEMICOLON, "Expected ';' after value")
-    return ExpressionStmt(expr);
+    return ExpressionStmt(expression())
   }
 
   // expression     → expressions ;
@@ -101,8 +109,11 @@ class Parser(private val tokens: List<Token>) {
   private fun comparison(): Expr {
     var expr = term()
     while (match(
-          TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL,
-      )) {
+        TokenType.GREATER,
+        TokenType.GREATER_EQUAL,
+        TokenType.LESS,
+        TokenType.LESS_EQUAL,
+    )) {
       val operator = previous()
       val right = term()
       expr = Binary(expr, operator, right)
@@ -151,12 +162,12 @@ class Parser(private val tokens: List<Token>) {
       match(TokenType.TRUE) -> Literal(true)
       match(TokenType.NIL) -> Literal(null)
       match(TokenType.NUMBER, TokenType.STRING) -> Literal(previous().literal)
+      match(TokenType.IDENTIFIER) -> Variable(previous())
       match(TokenType.LEFT_PAREN) -> {
         val expr = expression()
         consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
         Grouping(expr)
       }
-
       else -> {
         throw error(peek(), "Expected expression.")
       }
@@ -184,7 +195,6 @@ class Parser(private val tokens: List<Token>) {
         TokenType.WHILE,
         TokenType.PRINT,
         TokenType.RETURN -> return
-
         else -> {}
       }
     }
