@@ -1,5 +1,6 @@
 package misc
 
+import Assign
 import Binary
 import Expr
 import Grouping
@@ -9,6 +10,7 @@ import Variable
 
 fun prettyPrint(expr: Expr): String {
   return when (expr) {
+    is Assign -> parenthesize("=", expr, expr.value)
     is Binary -> parenthesize(expr.operator.lexeme, expr.left, expr.right)
     is Grouping -> parenthesize("group", expr.expression)
     is Literal ->

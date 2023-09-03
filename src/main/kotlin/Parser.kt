@@ -55,11 +55,7 @@ class Parser(private val tokens: List<Token>) {
   private fun declaration(): Stmt? {
     try {
       if (match(TokenType.VAR)) {
-        val id = consume(TokenType.IDENTIFIER, "Expected an identifier")
-        consume(TokenType.EQUAL, "Expected '=' after identifier")
-        val expr = expression()
-        consume(TokenType.SEMICOLON, "Expected ';' after statement")
-        return VarStmt(id, expr)
+        return varStatement()
       }
       val stmt = statement()
       consume(TokenType.SEMICOLON, "Expected ';' after statement")
@@ -72,11 +68,20 @@ class Parser(private val tokens: List<Token>) {
     }
   }
 
+  private fun varStatement(): Stmt {
+    val id = consume(TokenType.IDENTIFIER, "Expected an identifier")
+    consume(TokenType.EQUAL, "Expected '=' after identifier")
+    val expr = expression()
+    consume(TokenType.SEMICOLON, "Expected ';' after statement")
+    return VarStmt(id, expr)
+  }
+
   // statement → "print(" expression ")" | expression
   private fun statement(): Stmt {
     if (match(TokenType.PRINT)) {
       return PrintStmt(expression())
     }
+
     return ExpressionStmt(expression())
   }
 
@@ -87,9 +92,25 @@ class Parser(private val tokens: List<Token>) {
 
   // expressions       → (equality  ,)* equality ;
   private fun expressions(): Expr {
-    val expr = equality()
+    val expr = assignment()
     if (match(TokenType.COMMA)) {
       return Binary(expr, previous(), expressions())
+    }
+    return expr
+  }
+
+  // assignment     → IDENTIFIER "=" assignment
+  //               | equality ;
+  private fun assignment(): Expr {
+    val expr = equality()
+    if (match(TokenType.EQUAL)) {
+      val equals = previous()
+      val value = assignment()
+      if (expr is Variable) {
+        val name = expr.name
+        return Assign(name, value)
+      }
+      error(equals, "Invalid assignment target.")
     }
     return expr
   }

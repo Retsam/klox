@@ -5,11 +5,21 @@ class Environment {
     values[name] = value
   }
 
-  fun get(name: Token): Any? {
-    if (values.containsKey(name.lexeme)) {
-      return values[name.lexeme]
+  fun get(token: Token): Any? {
+    val name = token.lexeme
+    if (values.containsKey(name)) {
+      return values[name]
     }
-    throw Interpreter.RuntimeError(name, "Undefined variable '${name.lexeme}'.")
+    throw Interpreter.RuntimeError(token, "Undefined variable '${name}'.")
+  }
+
+  fun update(token: Token, value: Any?) {
+    val name = token.lexeme
+    if (values.containsKey(name)) {
+      values[name] = value
+      return
+    }
+    throw Interpreter.RuntimeError(token, "Undefined variable '$name'.")
   }
 }
 
@@ -58,6 +68,11 @@ class Interpreter {
 
   private fun evaluate(expr: Expr): Any? {
     return when (expr) {
+      is Assign -> {
+        val value = evaluate(expr.value)
+        environment.update(expr.name, value)
+        value
+      }
       is Binary -> binaryOperation(evaluate(expr.left), expr.operator, evaluate(expr.right))
       is Grouping -> evaluate(expr.expression)
       is Literal -> expr.value
