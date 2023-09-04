@@ -238,7 +238,7 @@ class Parser(private val tokens: List<Token>) {
         TokenType.WHILE,
         TokenType.PRINT,
         TokenType.RETURN -> return
-        else -> {}
+        else -> advance()
       }
     }
   }
