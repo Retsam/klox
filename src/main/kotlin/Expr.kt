@@ -14,6 +14,8 @@ class Variable(val name: Token) : Expr
 
 sealed interface Stmt
 
+class BlockStmt(val statements: List<Stmt>) : Stmt
+
 class ExpressionStmt(val expr: Expr) : Stmt
 
 class VarStmt(val identifier: Token, val expr: Expr) : Stmt

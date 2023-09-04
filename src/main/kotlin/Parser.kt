@@ -21,6 +21,11 @@ class Parser(private val tokens: List<Token>) {
     return tokens.getOrNull(current) ?: throw Exception("Unexpected end of input")
   }
 
+  private fun check(type: TokenType): Boolean {
+    if (isAtEnd()) return false
+    return peek().type == type
+  }
+
   private fun previous(): Token {
     return tokens[current - 1]
   }
@@ -57,9 +62,7 @@ class Parser(private val tokens: List<Token>) {
       if (match(TokenType.VAR)) {
         return varStatement()
       }
-      val stmt = statement()
-      consume(TokenType.SEMICOLON, "Expected ';' after statement")
-      return stmt
+      return statement()
     } catch (e: ParseError) {
       if (!isAtEnd()) {
         synchronize()
@@ -78,11 +81,26 @@ class Parser(private val tokens: List<Token>) {
 
   // statement → "print(" expression ")" | expression
   private fun statement(): Stmt {
-    if (match(TokenType.PRINT)) {
-      return PrintStmt(expression())
+    if (match(TokenType.LEFT_BRACE)) {
+      return BlockStmt(block())
     }
 
-    return ExpressionStmt(expression())
+    val stmt =
+        when {
+          match(TokenType.PRINT) -> PrintStmt(expression())
+          else -> ExpressionStmt(expression())
+        }
+    consume(TokenType.SEMICOLON, "Expected ';' after statement")
+    return stmt
+  }
+
+  private fun block(): List<Stmt> {
+    val statements = ArrayList<Stmt>()
+    while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+      declaration()?.let { statements.add(it) }
+    }
+    consume(TokenType.RIGHT_BRACE, "Expected '}' after block")
+    return statements
   }
 
   // expression     → expressions ;

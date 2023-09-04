@@ -1,4 +1,4 @@
-class Environment {
+class Environment(private val enclosure: Environment? = null) {
   private val values = HashMap<String, Any?>()
 
   fun define(name: String, value: Any?) {
@@ -10,6 +10,7 @@ class Environment {
     if (values.containsKey(name)) {
       return values[name]
     }
+    if (enclosure != null) return enclosure.get(token)
     throw Interpreter.RuntimeError(token, "Undefined variable '${name}'.")
   }
 
@@ -19,12 +20,16 @@ class Environment {
       values[name] = value
       return
     }
+    if (enclosure != null) {
+      enclosure.update(token, value)
+      return
+    }
     throw Interpreter.RuntimeError(token, "Undefined variable '$name'.")
   }
 }
 
 class Interpreter {
-  private val environment = Environment()
+  private var environment = Environment()
   fun interpret(statements: List<Stmt>) {
     try {
       for (stmt in statements) {
@@ -52,6 +57,17 @@ class Interpreter {
 
   private fun execute(stmt: Stmt) {
     when (stmt) {
+      is BlockStmt -> {
+        val scope = environment
+        try {
+          environment = Environment(environment)
+          for (statement in stmt.statements) {
+            execute(statement)
+          }
+        } finally {
+          environment = scope
+        }
+      }
       is ExpressionStmt -> {
         evaluate(stmt.expr)
       }
