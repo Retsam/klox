@@ -73,8 +73,12 @@ class Parser(private val tokens: List<Token>) {
 
   private fun varStatement(): Stmt {
     val id = consume(TokenType.IDENTIFIER, "Expected an identifier")
-    consume(TokenType.EQUAL, "Expected '=' after identifier")
-    val expr = expression()
+    val expr =
+        if (check(TokenType.EQUAL)) {
+          expression()
+        } else {
+          Literal(null)
+        }
     consume(TokenType.SEMICOLON, "Expected ';' after statement")
     return VarStmt(id, expr)
   }
