@@ -74,7 +74,7 @@ class Parser(private val tokens: List<Token>) {
   private fun varStatement(): Stmt {
     val id = consume(TokenType.IDENTIFIER, "Expected an identifier")
     val expr =
-        if (check(TokenType.EQUAL)) {
+        if (match(TokenType.EQUAL)) {
           expression()
         } else {
           Literal(null)
