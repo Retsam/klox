@@ -5,6 +5,7 @@ import Binary
 import Expr
 import Grouping
 import Literal
+import Logical
 import Unary
 import Variable
 
@@ -17,6 +18,7 @@ fun prettyPrint(expr: Expr): String {
         if (expr.value == null) {
           "nil"
         } else expr.value.toString()
+    is Logical -> parenthesize(expr.operator.lexeme, expr.left, expr.right)
     is Variable -> expr.name.lexeme
     is Unary -> parenthesize(expr.operator.lexeme, expr.right)
   }

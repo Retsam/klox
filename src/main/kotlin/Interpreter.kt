@@ -104,6 +104,7 @@ class Interpreter {
       is Binary -> binaryOperation(evaluate(expr.left), expr.operator, evaluate(expr.right))
       is Grouping -> evaluate(expr.expression)
       is Literal -> expr.value
+      is Logical -> logicalOperation(expr)
       is Variable -> environment.get(expr.name)
       is Unary -> unaryOperation(expr.operator, evaluate(expr.right))
     }
@@ -149,9 +150,19 @@ class Interpreter {
         right
       }
       else -> {
-        throw RuntimeError(operator, "Binary operator not supported.")
+        throw RuntimeError(operator, "Binary operator not supported. ${operator.lexeme}")
       }
     }
+  }
+
+  private fun logicalOperation(expr: Logical): Any? {
+    val left = evaluate(expr.left)
+    if (expr.operator.type == TokenType.OR) {
+      if (isTruthy(left)) return left
+    } else {
+      if (!isTruthy(left)) return left
+    }
+    return evaluate(expr.right)
   }
 
   private fun unaryOperation(operator: Token, right: Any?): Any {

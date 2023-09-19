@@ -149,9 +149,9 @@ class Parser(private val tokens: List<Token>) {
   }
 
   // assignment     → IDENTIFIER "=" assignment
-  //               | equality ;
+  //               | logic_or ;
   private fun assignment(): Expr {
-    val expr = equality()
+    val expr = logicOr()
     if (match(TokenType.EQUAL)) {
       val equals = previous()
       val value = assignment()
@@ -160,6 +160,28 @@ class Parser(private val tokens: List<Token>) {
         return Assign(name, value)
       }
       error(equals, "Invalid assignment target.")
+    }
+    return expr
+  }
+
+  // logic_or       → logic_and ( "or" logic_and )* ;
+  private fun logicOr(): Expr {
+    var expr = logicAnd()
+    while (match(TokenType.OR)) {
+      val operator = previous()
+      val right = logicAnd()
+      expr = Logical(expr, operator, right)
+    }
+    return expr
+  }
+
+  // logic_and      → equality ( "and" equality )* ;
+  private fun logicAnd(): Expr {
+    var expr = equality()
+    while (match(TokenType.AND)) {
+      val operator = previous()
+      val right = equality()
+      expr = Logical(expr, operator, right)
     }
     return expr
   }
