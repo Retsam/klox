@@ -48,8 +48,9 @@ fun run(source: String) {
   val scanner = Scanner(source)
   val tokens = scanner.scanTokens()
 
-  val expr = Parser(tokens).parse()
-  interpreter.interpret(expr)
+  val statements = Parser(tokens).parse()
+  //  statements.forEach { println(prettyPrint(it)) }
+  interpreter.interpret(statements)
 }
 
 private fun report(line: Int, where: String, message: String) {

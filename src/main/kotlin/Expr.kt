@@ -1,4 +1,7 @@
-sealed interface Expr
+// Shared root to allow functions to accept either a Stmt or an Expr (mostly used for pretty print)
+sealed interface StmtExpr
+
+sealed interface Expr : StmtExpr
 
 class Assign(val name: Token, val value: Expr) : Expr
 
@@ -14,7 +17,7 @@ class Unary(val operator: Token, val right: Expr) : Expr
 
 class Variable(val name: Token) : Expr
 
-sealed interface Stmt
+sealed interface Stmt : StmtExpr
 
 class BlockStmt(val statements: List<Stmt>) : Stmt
 
