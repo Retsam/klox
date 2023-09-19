@@ -97,6 +97,7 @@ class Parser(private val tokens: List<Token>) {
     return when {
       match(TokenType.PRINT) -> withSemicolon(PrintStmt(expression()))
       match(TokenType.IF) -> ifStatement()
+      match(TokenType.WHILE) -> whileStatement()
       else -> withSemicolon(ExpressionStmt(expression()))
     }
   }
@@ -123,6 +124,14 @@ class Parser(private val tokens: List<Token>) {
           null
         }
     return IfStmt(condition, thenBranch, elseBranch)
+  }
+
+  private fun whileStatement(): WhileStmt {
+    consume(TokenType.LEFT_PAREN, "Expected '(' after 'while'")
+    val condition = expression()
+    consume(TokenType.RIGHT_PAREN, "Expected ')' after while condition")
+    val body = statement()
+    return WhileStmt(condition, body)
   }
 
   // expression     → expressions ;

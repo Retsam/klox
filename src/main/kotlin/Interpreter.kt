@@ -86,6 +86,11 @@ class Interpreter {
         val value = evaluate(stmt.expr)
         environment.define(stmt.identifier.lexeme, value)
       }
+      is WhileStmt -> {
+        while (isTruthy(evaluate(stmt.condition))) {
+          execute(stmt.body)
+        }
+      }
     }
   }
 
