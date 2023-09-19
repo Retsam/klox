@@ -5,7 +5,14 @@ import kotlin.system.exitProcess
 var hadError = false
 var hadRuntimeError = false
 
-val interpreter = Interpreter()
+var interpreter = Interpreter()
+
+fun reset() {
+  hadError = false
+  hadRuntimeError = false
+
+  interpreter = Interpreter()
+}
 
 fun main(args: Array<String>) {
   if (args.size > 1) {
@@ -19,8 +26,7 @@ fun main(args: Array<String>) {
 }
 
 fun runFile(path: String) {
-  val bytes: ByteArray = File(path).readBytes()
-  run(String(bytes, Charsets.UTF_8))
+  run(File(path).readText())
 
   // Indicate an error in the exit code.
   if (hadError) exitProcess(65)
