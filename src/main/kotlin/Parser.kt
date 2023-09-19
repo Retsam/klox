@@ -89,13 +89,16 @@ class Parser(private val tokens: List<Token>) {
       return BlockStmt(block())
     }
 
-    val stmt =
-        when {
-          match(TokenType.PRINT) -> PrintStmt(expression())
-          else -> ExpressionStmt(expression())
-        }
-    consume(TokenType.SEMICOLON, "Expected ';' after statement")
-    return stmt
+    val withSemicolon = { stmt: Stmt ->
+      consume(TokenType.SEMICOLON, "Expected ';' after statement")
+      stmt
+    }
+
+    return when {
+      match(TokenType.PRINT) -> withSemicolon(PrintStmt(expression()))
+      match(TokenType.IF) -> ifStatement()
+      else -> withSemicolon(ExpressionStmt(expression()))
+    }
   }
 
   private fun block(): List<Stmt> {
@@ -105,6 +108,21 @@ class Parser(private val tokens: List<Token>) {
     }
     consume(TokenType.RIGHT_BRACE, "Expected '}' after block")
     return statements
+  }
+
+  private fun ifStatement(): IfStmt {
+    consume(TokenType.LEFT_PAREN, "Expected '(' after 'if'")
+    val condition = expression()
+    consume(TokenType.RIGHT_PAREN, "Expected ')' after if condition")
+
+    val thenBranch = statement()
+    val elseBranch =
+        if (match(TokenType.ELSE)) {
+          statement()
+        } else {
+          null
+        }
+    return IfStmt(condition, thenBranch, elseBranch)
   }
 
   // expression     → expressions ;

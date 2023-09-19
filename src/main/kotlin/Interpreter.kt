@@ -71,6 +71,13 @@ class Interpreter {
       is ExpressionStmt -> {
         evaluate(stmt.expr)
       }
+      is IfStmt -> {
+        if (isTruthy(evaluate(stmt.condition))) {
+          execute(stmt.thenBranch)
+        } else {
+          stmt.elseBranch?.let { execute(it) }
+        }
+      }
       is PrintStmt -> {
         val value = evaluate(stmt.expr)
         println(stringify(value))

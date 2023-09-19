@@ -16,6 +16,8 @@ sealed interface Stmt
 
 class BlockStmt(val statements: List<Stmt>) : Stmt
 
+class IfStmt(val condition: Expr, val thenBranch: Stmt, val elseBranch: Stmt?) : Stmt
+
 class ExpressionStmt(val expr: Expr) : Stmt
 
 class VarStmt(val identifier: Token, val expr: Expr) : Stmt
