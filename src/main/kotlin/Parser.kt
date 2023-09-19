@@ -56,11 +56,16 @@ class Parser(private val tokens: List<Token>) {
     return statements
   }
 
+  private fun withSemicolon(stmt: Stmt): Stmt {
+    consume(TokenType.SEMICOLON, "Expected ';' after statement")
+    return stmt
+  }
+
   // declaration → (IDENTIFIER = expression) | statement
   private fun declaration(): Stmt? {
     try {
       if (match(TokenType.VAR)) {
-        return varStatement()
+        return withSemicolon(varStatement())
       }
       return statement()
     } catch (e: ParseError) {
@@ -79,7 +84,6 @@ class Parser(private val tokens: List<Token>) {
         } else {
           Literal(null)
         }
-    consume(TokenType.SEMICOLON, "Expected ';' after statement")
     return VarStmt(id, expr)
   }
 
@@ -89,15 +93,11 @@ class Parser(private val tokens: List<Token>) {
       return BlockStmt(block())
     }
 
-    val withSemicolon = { stmt: Stmt ->
-      consume(TokenType.SEMICOLON, "Expected ';' after statement")
-      stmt
-    }
-
     return when {
       match(TokenType.PRINT) -> withSemicolon(PrintStmt(expression()))
       match(TokenType.IF) -> ifStatement()
       match(TokenType.WHILE) -> whileStatement()
+      match(TokenType.FOR) -> forStatement()
       else -> withSemicolon(ExpressionStmt(expression()))
     }
   }
@@ -132,6 +132,46 @@ class Parser(private val tokens: List<Token>) {
     consume(TokenType.RIGHT_PAREN, "Expected ')' after while condition")
     val body = statement()
     return WhileStmt(condition, body)
+  }
+
+  private fun forStatement(): Stmt {
+    consume(TokenType.LEFT_PAREN, "Expected '(' after 'for'")
+    val init =
+        when (peek().type) {
+          TokenType.SEMICOLON -> null
+          TokenType.VAR -> {
+            advance()
+            varStatement()
+          }
+          else -> ExpressionStmt(expression())
+        }
+    consume(TokenType.SEMICOLON, "Expected ';' after for initializer")
+
+    var condition: Expr? = null
+    if (!check(TokenType.SEMICOLON)) {
+      condition = expression()
+    }
+    consume(TokenType.SEMICOLON, "Expected ';' after for condition")
+
+    var increment: Expr? = null
+    if (!check(TokenType.SEMICOLON)) {
+      increment = expression()
+    }
+    consume(TokenType.RIGHT_PAREN, "Expected ')' after for clauses")
+    val body = statement()
+
+    // Constructing the sugar for while loops
+    var whileBody = body
+    if (increment != null) {
+      whileBody = BlockStmt(listOf(body, ExpressionStmt(increment)))
+    }
+
+    val loopStatement = WhileStmt(condition ?: Literal(true), whileBody)
+    return if (init != null) {
+      BlockStmt(listOf(init, loopStatement))
+    } else {
+      loopStatement
+    }
   }
 
   // expression     → expressions ;
