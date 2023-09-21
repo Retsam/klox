@@ -35,6 +35,8 @@ interface LoxCallable {
   fun arity(): Int
 }
 
+class Return(val value: Any?) : RuntimeException(null, null, false, false)
+
 class LoxCallableFunction(private val func: Function) : LoxCallable {
   override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
     val scope = interpreter.environment
@@ -134,6 +136,9 @@ class Interpreter {
         val value = evaluate(stmt.expr)
         println(stringify(value))
       }
+      is ReturnStmt -> {
+        throw Return(stmt.value?.let { evaluate(it) })
+      }
       is VarStmt -> {
         val value = evaluate(stmt.expr)
         environment.define(stmt.identifier.lexeme, value)
@@ -166,7 +171,12 @@ class Interpreter {
               "Expected ${callee.arity()} arguments but got ${arguments.size}.",
           )
         }
-        callee.call(this, arguments)
+        try {
+          callee.call(this, arguments)
+        } catch (e: Return) {
+          return e.value
+        }
+        return null
       }
       is Grouping -> evaluate(expr.expression)
       is Literal -> expr.value

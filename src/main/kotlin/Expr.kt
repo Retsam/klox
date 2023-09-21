@@ -31,6 +31,8 @@ class WhileStmt(val condition: Expr, val body: Stmt) : Stmt
 
 class ExpressionStmt(val expr: Expr) : Stmt
 
+class ReturnStmt(val keyword: Token, val value: Expr?) : Stmt
+
 class VarStmt(val identifier: Token, val expr: Expr) : Stmt
 
 class PrintStmt(val expr: Expr) : Stmt

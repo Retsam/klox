@@ -119,6 +119,9 @@ class Parser(private val tokens: List<Token>) {
       match(TokenType.IF) -> ifStatement()
       match(TokenType.WHILE) -> whileStatement()
       match(TokenType.FOR) -> forStatement()
+      match(TokenType.RETURN) -> {
+        withSemicolon(ReturnStmt(previous(), expression()))
+      }
       else -> withSemicolon(ExpressionStmt(expression()))
     }
   }

@@ -11,6 +11,7 @@ import IfStmt
 import Literal
 import Logical
 import PrintStmt
+import ReturnStmt
 import StmtExpr
 import Unary
 import VarStmt
@@ -45,6 +46,7 @@ fun prettyPrint(expr: StmtExpr): String {
     is ExpressionStmt -> parenthesize("expression", expr.expr)
     is IfStmt -> parenthesize("if", expr.condition, expr.thenBranch, expr.elseBranch)
     is PrintStmt -> parenthesize("print", expr.expr)
+    is ReturnStmt -> parenthesize("return", expr.value)
     is VarStmt -> parenthesize("var ${expr.identifier}", expr.expr)
     is WhileStmt -> parenthesize("while", expr.condition, expr.body)
   }
