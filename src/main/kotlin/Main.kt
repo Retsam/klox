@@ -1,9 +1,11 @@
 import java.io.File
 import java.io.InputStreamReader
 import kotlin.system.exitProcess
+import misc.prettyPrint
 
 var hadError = false
 var hadRuntimeError = false
+var debug = false
 
 var interpreter = Interpreter()
 
@@ -14,7 +16,12 @@ fun reset() {
   interpreter = Interpreter()
 }
 
-fun main(args: Array<String>) {
+fun main(argsIn: Array<String>) {
+  var args = argsIn.toList()
+  if (args.find { it == "--debug" } != null) {
+    debug = true
+    args = args.filter { it != "--debug" }
+  }
   if (args.size > 1) {
     println("Usage: klox [script]")
     exitProcess(64)
@@ -49,8 +56,11 @@ fun run(source: String) {
   val tokens = scanner.scanTokens()
 
   val statements = Parser(tokens).parse()
-  //  statements.forEach { println(prettyPrint(it)) }
-  interpreter.interpret(statements)
+
+  if (debug) statements.forEach { println(prettyPrint(it)) }
+  else {
+    interpreter.interpret(statements)
+  }
 }
 
 private fun report(line: Int, where: String, message: String) {
