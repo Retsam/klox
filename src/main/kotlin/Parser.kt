@@ -67,6 +67,9 @@ class Parser(private val tokens: List<Token>) {
       if (match(TokenType.VAR)) {
         return withSemicolon(varStatement())
       }
+      if (match(TokenType.FUN)) {
+        return function("function")
+      }
       return statement()
     } catch (e: ParseError) {
       if (!isAtEnd()) {
@@ -85,6 +88,24 @@ class Parser(private val tokens: List<Token>) {
           Literal(null)
         }
     return VarStmt(id, expr)
+  }
+
+  private fun function(kind: String): Stmt {
+    val name = consume(TokenType.IDENTIFIER, "Expected $kind name")
+    consume(TokenType.LEFT_PAREN, "Expected '(' after $kind name")
+    val parameters = ArrayList<Token>()
+    if (!check(TokenType.RIGHT_PAREN)) {
+      do {
+        if (parameters.size >= 255) {
+          error(peek(), "Can't have more than 255 parameters.")
+        }
+        parameters.add(consume(TokenType.IDENTIFIER, "Expected parameter name"))
+      } while (match(TokenType.COMMA))
+    }
+    consume(TokenType.RIGHT_PAREN, "Expected ')' after parameters")
+    consume(TokenType.LEFT_BRACE, "Expected '{' before $kind body")
+    val body = block()
+    return Function(name, parameters, body)
   }
 
   // statement → "print(" expression ")" | expression

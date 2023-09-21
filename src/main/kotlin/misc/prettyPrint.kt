@@ -4,6 +4,7 @@ import Assign
 import Binary
 import BlockStmt
 import ExpressionStmt
+import Function
 import FunctionCall
 import Grouping
 import IfStmt
@@ -19,6 +20,16 @@ import WhileStmt
 fun prettyPrint(expr: StmtExpr): String {
   return when (expr) {
     is Assign -> parenthesize("=", expr, expr.value)
+    is Function ->
+        parenthesize(
+            "fun ${expr.name.lexeme} ${
+              expr.parameters.joinToString(
+                  ", ",
+                  transform = { it.lexeme },
+              )
+            }",
+            *expr.body.toTypedArray())
+    is FunctionCall -> parenthesize("call", expr.primary, *expr.arguments.toTypedArray())
     is Binary -> parenthesize(expr.operator.lexeme, expr.left, expr.right)
     is Grouping -> parenthesize("group", expr.expression)
     is Literal ->
@@ -28,7 +39,6 @@ fun prettyPrint(expr: StmtExpr): String {
     is Logical -> parenthesize(expr.operator.lexeme, expr.left, expr.right)
     is Variable -> expr.name.lexeme
     is Unary -> parenthesize(expr.operator.lexeme, expr.right)
-    is FunctionCall -> parenthesize("call", expr.primary, *expr.arguments.toTypedArray())
 
     // Statements
     is BlockStmt -> parenthesize("block", *expr.statements.toTypedArray())

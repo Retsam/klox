@@ -35,8 +35,32 @@ interface LoxCallable {
   fun arity(): Int
 }
 
+class LoxCallableFunction(private val func: Function) : LoxCallable {
+  override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
+    val scope = interpreter.environment
+    try {
+      interpreter.environment = Environment(interpreter.environment)
+      for (i in func.parameters.indices) {
+        interpreter.environment.define(func.parameters[i].lexeme, arguments[i])
+      }
+      interpreter.interpret(func.body)
+    } finally {
+      interpreter.environment = scope
+    }
+    return null
+  }
+
+  override fun arity(): Int {
+    return func.parameters.size
+  }
+
+  override fun toString(): String {
+    return "<fn ${func.name.lexeme}>"
+  }
+}
+
 class Interpreter {
-  private var environment =
+  var environment =
       Environment()
           .define(
               "clock",
@@ -95,6 +119,9 @@ class Interpreter {
       }
       is ExpressionStmt -> {
         evaluate(stmt.expr)
+      }
+      is Function -> {
+        environment.define(stmt.name.lexeme, LoxCallableFunction(stmt))
       }
       is IfStmt -> {
         if (isTruthy(evaluate(stmt.condition))) {
