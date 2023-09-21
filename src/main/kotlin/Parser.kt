@@ -275,15 +275,47 @@ class Parser(private val tokens: List<Token>) {
     return expr
   }
 
-  // unary          → ( "!" | "-" ) unary
-  //               | primary ;
+  // unary          → ( "!" | "-" ) unary | call
   private fun unary(): Expr {
     if (match(TokenType.BANG, TokenType.MINUS)) {
       val op = previous()
       val right = unary()
       return Unary(op, right)
     }
-    return primary()
+
+    return call()
+  }
+
+  // call           → primary ( "(" arguments? ")" )* ;
+  private fun call(): Expr {
+    var expr = primary()
+    while (true) {
+      if (match(TokenType.LEFT_PAREN)) {
+        expr = finishCall(expr)
+      } else {
+        break
+      }
+    }
+    return expr
+  }
+
+  private fun finishCall(primary: Expr): Expr {
+    val arguments = ArrayList<Expr>()
+    if (!check(TokenType.RIGHT_PAREN)) {
+      do {
+        // allow trailing comma
+        if (peek().type == TokenType.RIGHT_PAREN) {
+          break
+        }
+        if (arguments.size >= 255) {
+          error(peek(), "Can't have more than 255 arguments.")
+        }
+        // Bypassing expression/expressions to avoid the comma operator
+        arguments.add(assignment())
+      } while (match(TokenType.COMMA))
+    }
+    val paren = consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.")
+    return FunctionCall(primary, paren, arguments)
   }
 
   // primary        → NUMBER | STRING | "true" | "false" | "nil"

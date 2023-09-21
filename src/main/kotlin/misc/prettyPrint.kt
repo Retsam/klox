@@ -4,6 +4,7 @@ import Assign
 import Binary
 import BlockStmt
 import ExpressionStmt
+import FunctionCall
 import Grouping
 import IfStmt
 import Literal
@@ -27,6 +28,7 @@ fun prettyPrint(expr: StmtExpr): String {
     is Logical -> parenthesize(expr.operator.lexeme, expr.left, expr.right)
     is Variable -> expr.name.lexeme
     is Unary -> parenthesize(expr.operator.lexeme, expr.right)
+    is FunctionCall -> parenthesize("call", expr.primary, *expr.arguments.toTypedArray())
 
     // Statements
     is BlockStmt -> parenthesize("block", *expr.statements.toTypedArray())

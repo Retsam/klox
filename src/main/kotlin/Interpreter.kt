@@ -1,8 +1,9 @@
 class Environment(private val enclosure: Environment? = null) {
   private val values = HashMap<String, Any?>()
 
-  fun define(name: String, value: Any?) {
+  fun define(name: String, value: Any?): Environment {
     values[name] = value
+    return this
   }
 
   fun get(token: Token): Any? {
@@ -28,8 +29,32 @@ class Environment(private val enclosure: Environment? = null) {
   }
 }
 
+interface LoxCallable {
+  fun call(interpreter: Interpreter, arguments: List<Any?>): Any?
+
+  fun arity(): Int
+}
+
 class Interpreter {
-  private var environment = Environment()
+  private var environment =
+      Environment()
+          .define(
+              "clock",
+              object : LoxCallable {
+                override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
+                  return System.currentTimeMillis() / 1000.0
+                }
+
+                override fun arity(): Int {
+                  return 0
+                }
+
+                override fun toString(): String {
+                  return "<native fn>"
+                }
+              },
+          )
+
   fun interpret(statements: List<Stmt>) {
     try {
       for (stmt in statements) {
@@ -102,6 +127,20 @@ class Interpreter {
         value
       }
       is Binary -> binaryOperation(evaluate(expr.left), expr.operator, evaluate(expr.right))
+      is FunctionCall -> {
+        val callee = evaluate(expr.primary)
+        val arguments = expr.arguments.map { evaluate(it) }
+        if (callee !is LoxCallable) {
+          throw RuntimeError(expr.paren, "Can only call functions and classes.")
+        }
+        if (arguments.size != callee.arity()) {
+          throw RuntimeError(
+              expr.paren,
+              "Expected ${callee.arity()} arguments but got ${arguments.size}.",
+          )
+        }
+        callee.call(this, arguments)
+      }
       is Grouping -> evaluate(expr.expression)
       is Literal -> expr.value
       is Logical -> logicalOperation(expr)
