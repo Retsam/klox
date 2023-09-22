@@ -37,11 +37,12 @@ interface LoxCallable {
 
 class Return(val value: Any?) : RuntimeException(null, null, false, false)
 
-class LoxCallableFunction(private val func: Function) : LoxCallable {
+class LoxCallableFunction(private val func: Function, private val enclosure: Environment?) :
+    LoxCallable {
   override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
     val scope = interpreter.environment
     try {
-      interpreter.environment = Environment(interpreter.environment)
+      interpreter.environment = Environment(enclosure)
       for (i in func.parameters.indices) {
         interpreter.environment.define(func.parameters[i].lexeme, arguments[i])
       }
@@ -123,7 +124,7 @@ class Interpreter {
         evaluate(stmt.expr)
       }
       is Function -> {
-        environment.define(stmt.name.lexeme, LoxCallableFunction(stmt))
+        environment.define(stmt.name.lexeme, LoxCallableFunction(stmt, environment))
       }
       is IfStmt -> {
         if (isTruthy(evaluate(stmt.condition))) {

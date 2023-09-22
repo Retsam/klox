@@ -71,4 +71,9 @@ internal class ScriptTests {
               987"""
             .trimIndent() + "\n")
   }
+
+  @Test
+  fun counter() {
+    runFile("counter.lox", "1\n2\n")
+  }
 }
