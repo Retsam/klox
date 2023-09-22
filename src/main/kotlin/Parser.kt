@@ -1,5 +1,10 @@
 class Parser(private val tokens: List<Token>) {
   private var current = 0
+  /**
+   * Used to track whether we're inside a function, to be able to syntax error on a standalone
+   * return statement.
+   */
+  private var functionDepth = 0
 
   fun parse(): List<Stmt> {
     return try {
@@ -104,7 +109,9 @@ class Parser(private val tokens: List<Token>) {
     }
     consume(TokenType.RIGHT_PAREN, "Expected ')' after parameters")
     consume(TokenType.LEFT_BRACE, "Expected '{' before $kind body")
+    functionDepth += 1
     val body = block()
+    functionDepth -= 1
     return Function(name, parameters, body)
   }
 
@@ -120,6 +127,9 @@ class Parser(private val tokens: List<Token>) {
       match(TokenType.WHILE) -> whileStatement()
       match(TokenType.FOR) -> forStatement()
       match(TokenType.RETURN) -> {
+        if (functionDepth == 0) {
+          error(previous(), "Can't return from top-level code.")
+        }
         withSemicolon(ReturnStmt(previous(), expression()))
       }
       else -> withSemicolon(ExpressionStmt(expression()))
