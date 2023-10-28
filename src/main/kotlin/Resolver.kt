@@ -1,6 +1,12 @@
+enum class FunctionType {
+  NONE,
+  FUNCTION,
+}
+
 class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
 
   private val scopes = ArrayDeque<MutableMap<String, Boolean>>() // true if variable is initialized
+  private var currentFunction = FunctionType.NONE
 
   init {
     program.forEach { resolve(it) }
@@ -14,7 +20,11 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
   }
   private fun declare(name: Token) {
     if (scopes.isEmpty()) return
-    scopes.first()[name.lexeme] = false
+    val scope = scopes.first()
+    if (scope.containsKey(name.lexeme)) {
+      tokenError(name, "Variable with this name already declared in this scope.")
+    }
+    scope[name.lexeme] = false
   }
   private fun define(name: Token) {
     if (scopes.isEmpty()) return
@@ -67,8 +77,17 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
           declare(it)
           define(it)
         }
+        val prevFunction = currentFunction
+        currentFunction = FunctionType.FUNCTION
         expr.body.forEach { resolve(it) }
+        currentFunction = prevFunction
         popScope()
+      }
+      is ReturnStmt -> {
+        if (currentFunction == FunctionType.NONE) {
+          tokenError(expr.keyword, "Cannot return from top-level code.")
+        }
+        expr.value?.let { resolve(it) }
       }
 
       // no interesting logic, just tree walking
@@ -96,7 +115,6 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
         expr.elseBranch?.let { resolve(it) }
       }
       is PrintStmt -> resolve(expr.expr)
-      is ReturnStmt -> expr.value?.let { resolve(it) }
       is WhileStmt -> resolve(expr.body)
     }
   }

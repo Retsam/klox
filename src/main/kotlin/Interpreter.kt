@@ -111,8 +111,11 @@ class Interpreter {
     }
   }
 
+  fun runResolver(program: List<Stmt>) {
+    Resolver(locals, program)
+  }
+
   fun interpret(statements: List<Stmt>) {
-    Resolver(locals, statements)
     try {
       for (stmt in statements) {
         execute(stmt)
