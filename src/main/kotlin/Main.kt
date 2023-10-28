@@ -6,6 +6,7 @@ import misc.prettyPrint
 var hadError = false
 var hadRuntimeError = false
 var debug = false
+var testMode = false
 
 var interpreter = Interpreter()
 
@@ -36,8 +37,8 @@ fun runFile(path: String) {
   run(File(path).readText())
 
   // Indicate an error in the exit code.
-  if (hadError) exitProcess(65)
-  if (hadRuntimeError) exitProcess(70)
+  if (hadError && !testMode) exitProcess(65)
+  if (hadRuntimeError && !testMode) exitProcess(70)
 }
 
 fun runPrompt() {

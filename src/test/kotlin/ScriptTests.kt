@@ -10,19 +10,30 @@ internal class ScriptTests {
   @BeforeEach
   fun cleanUp() {
     reset()
+    testMode = true
   }
 
-  private fun runFile(name: String, expectedOut: String) {
+  private fun run(name: String): String {
     val outputStream = ByteArrayOutputStream()
     val stdout = System.out
     System.setOut(PrintStream(outputStream))
 
     runFile("lox/$name")
+    System.setOut(stdout)
+    return outputStream.toString()
+  }
+  private fun runFile(name: String, expectedOut: String) {
+    val out = run(name)
+
     assertFalse(hadError)
     assertFalse(hadRuntimeError)
 
-    System.setOut(stdout)
-    assertEquals(expectedOut, outputStream.toString())
+    assertEquals(expectedOut, out)
+  }
+  private fun runFileWithError(name: String, expectedOut: String) {
+    val out = run(name)
+
+    assertEquals(expectedOut, out)
   }
 
   @Test
@@ -79,5 +90,13 @@ internal class ScriptTests {
   @Test
   fun resolution() {
     runFile("resolution.lox", "global\nglobal\n")
+  }
+
+  @Test
+  fun resolve_error() {
+    runFileWithError(
+        "resolve_error.lox",
+        "[line 3] Error at 'a': Variable with this name already declared in this scope.\n" +
+            "[line 6] Error at 'return': Cannot return from top-level code.\n")
   }
 }
