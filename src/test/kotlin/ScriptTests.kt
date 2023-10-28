@@ -76,4 +76,8 @@ internal class ScriptTests {
   fun counter() {
     runFile("counter.lox", "1\n2\n")
   }
+  @Test
+  fun resolution() {
+    runFile("resolution.lox", "global\nglobal\n")
+  }
 }

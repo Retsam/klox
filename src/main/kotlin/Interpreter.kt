@@ -1,9 +1,25 @@
 class Environment(private val enclosure: Environment? = null) {
   private val values = HashMap<String, Any?>()
 
-  fun define(name: String, value: Any?): Environment {
+  fun assign(name: String, value: Any?): Environment {
     values[name] = value
     return this
+  }
+
+  fun assignAt(distance: Int, name: String, value: Any?) {
+    var environment = this
+    for (i in 0 until distance) {
+      assert(
+          environment.enclosure != null,
+      ) {
+        "Assertion failed: invalid distance resolving variable."
+      }
+      environment = environment.enclosure!!
+    }
+    assert(environment.values.containsKey(name)) {
+      "Assertion failed: invalid name resolving variable."
+    }
+    environment.values[name] = value
   }
 
   fun get(token: Token): Any? {
@@ -11,21 +27,23 @@ class Environment(private val enclosure: Environment? = null) {
     if (values.containsKey(name)) {
       return values[name]
     }
-    if (enclosure != null) return enclosure.get(token)
     throw Interpreter.RuntimeError(token, "Undefined variable '${name}'.")
   }
 
-  fun update(token: Token, value: Any?) {
-    val name = token.lexeme
-    if (values.containsKey(name)) {
-      values[name] = value
-      return
+  fun getAt(distance: Int, name: String): Any? {
+    var environment = this
+    for (i in 0 until distance) {
+      assert(
+          environment.enclosure != null,
+      ) {
+        "Assertion failed: invalid distance resolving variable."
+      }
+      environment = environment.enclosure!!
     }
-    if (enclosure != null) {
-      enclosure.update(token, value)
-      return
+    assert(environment.values.containsKey(name)) {
+      "Assertion failed: invalid name resolving variable."
     }
-    throw Interpreter.RuntimeError(token, "Undefined variable '$name'.")
+    return environment.values[name]
   }
 }
 
@@ -44,7 +62,7 @@ class LoxCallableFunction(private val func: Function, private val enclosure: Env
     try {
       interpreter.environment = Environment(enclosure)
       for (i in func.parameters.indices) {
-        interpreter.environment.define(func.parameters[i].lexeme, arguments[i])
+        interpreter.environment.assign(func.parameters[i].lexeme, arguments[i])
       }
       interpreter.interpret(func.body)
     } finally {
@@ -65,7 +83,7 @@ class LoxCallableFunction(private val func: Function, private val enclosure: Env
 class Interpreter {
   var environment =
       Environment()
-          .define(
+          .assign(
               "clock",
               object : LoxCallable {
                 override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
@@ -81,8 +99,20 @@ class Interpreter {
                 }
               },
           )
+  private var globals = environment
+
+  // Maps from the expression to the distance from the current scope
+  private val locals: MutableMap<Expr, Int> = HashMap()
+
+  private fun lookupVariable(expr: Variable): Any? {
+    return when (val distance = locals[expr]) {
+      null -> globals.get(expr.name)
+      else -> environment.getAt(distance, expr.name.lexeme)
+    }
+  }
 
   fun interpret(statements: List<Stmt>) {
+    Resolver(locals, statements)
     try {
       for (stmt in statements) {
         execute(stmt)
@@ -124,7 +154,7 @@ class Interpreter {
         evaluate(stmt.expr)
       }
       is Function -> {
-        environment.define(stmt.name.lexeme, LoxCallableFunction(stmt, environment))
+        environment.assign(stmt.name.lexeme, LoxCallableFunction(stmt, environment))
       }
       is IfStmt -> {
         if (isTruthy(evaluate(stmt.condition))) {
@@ -142,7 +172,7 @@ class Interpreter {
       }
       is VarStmt -> {
         val value = evaluate(stmt.expr)
-        environment.define(stmt.identifier.lexeme, value)
+        environment.assign(stmt.identifier.lexeme, value)
       }
       is WhileStmt -> {
         while (isTruthy(evaluate(stmt.condition))) {
@@ -156,7 +186,10 @@ class Interpreter {
     return when (expr) {
       is Assign -> {
         val value = evaluate(expr.value)
-        environment.update(expr.name, value)
+        when (val distance = locals[expr]) {
+          null -> globals.assign(expr.name.lexeme, value)
+          else -> environment.assignAt(distance, expr.name.lexeme, value)
+        }
         value
       }
       is Binary -> binaryOperation(evaluate(expr.left), expr.operator, evaluate(expr.right))
@@ -182,7 +215,7 @@ class Interpreter {
       is Grouping -> evaluate(expr.expression)
       is Literal -> expr.value
       is Logical -> logicalOperation(expr)
-      is Variable -> environment.get(expr.name)
+      is Variable -> lookupVariable(expr)
       is Unary -> unaryOperation(expr.operator, evaluate(expr.right))
     }
   }
