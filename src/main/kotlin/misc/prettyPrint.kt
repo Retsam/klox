@@ -3,6 +3,7 @@ package misc
 import Assign
 import Binary
 import BlockStmt
+import ClassStmt
 import ExpressionStmt
 import Function
 import FunctionCall
@@ -21,6 +22,7 @@ import WhileStmt
 fun prettyPrint(expr: StmtExpr): String {
   return when (expr) {
     is Assign -> parenthesize("=", expr, expr.value)
+    is ClassStmt -> parenthesize("class ${expr.name.lexeme}", *expr.methods.toTypedArray())
     is Function ->
         parenthesize(
             "fun ${expr.name.lexeme} ${

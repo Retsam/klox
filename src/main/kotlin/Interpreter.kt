@@ -65,9 +65,12 @@ class LoxCallableFunction(private val func: Function, private val enclosure: Env
         interpreter.environment.assign(func.parameters[i].lexeme, arguments[i])
       }
       interpreter.interpret(func.body)
+    } catch (e: Return) {
+      return e.value
     } finally {
       interpreter.environment = scope
     }
+
     return null
   }
 
@@ -77,6 +80,26 @@ class LoxCallableFunction(private val func: Function, private val enclosure: Env
 
   override fun toString(): String {
     return "<fn ${func.name.lexeme}>"
+  }
+}
+
+class LoxInstance(val clazz: LoxClass) {
+  override fun toString(): String {
+    return "<instance ${clazz.name.lexeme}>"
+  }
+}
+
+class LoxClass(val name: Token) : LoxCallable {
+  override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
+    return LoxInstance(this)
+  }
+
+  override fun arity(): Int {
+    return 0
+  }
+
+  override fun toString(): String {
+    return "<class ${name.lexeme}>"
   }
 }
 
@@ -153,6 +176,9 @@ class Interpreter {
           environment = scope
         }
       }
+      is ClassStmt -> {
+        environment.assign(stmt.name.lexeme, LoxClass(stmt.name))
+      }
       is ExpressionStmt -> {
         evaluate(stmt.expr)
       }
@@ -208,12 +234,7 @@ class Interpreter {
               "Expected ${callee.arity()} arguments but got ${arguments.size}.",
           )
         }
-        try {
-          callee.call(this, arguments)
-        } catch (e: Return) {
-          return e.value
-        }
-        return null
+        return callee.call(this, arguments)
       }
       is Grouping -> evaluate(expr.expression)
       is Literal -> expr.value

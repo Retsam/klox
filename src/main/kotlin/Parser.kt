@@ -64,6 +64,9 @@ class Parser(private val tokens: List<Token>) {
   // declaration → (IDENTIFIER = expression) | statement
   private fun declaration(): Stmt? {
     try {
+      if (match(TokenType.CLASS)) {
+        return classDeclaration()
+      }
       if (match(TokenType.VAR)) {
         return withSemicolon(varStatement())
       }
@@ -79,6 +82,17 @@ class Parser(private val tokens: List<Token>) {
     }
   }
 
+  private fun classDeclaration(): Stmt {
+    val name = consume(TokenType.IDENTIFIER, "Expected class name")
+    consume(TokenType.LEFT_BRACE, "Expected '{' before class body")
+    val methods = ArrayList<Function>()
+    while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+      methods.add(function("method"))
+    }
+    consume(TokenType.RIGHT_BRACE, "Expected '}' after class body")
+    return ClassStmt(name, methods)
+  }
+
   private fun varStatement(): Stmt {
     val id = consume(TokenType.IDENTIFIER, "Expected an identifier")
     val expr =
@@ -90,7 +104,7 @@ class Parser(private val tokens: List<Token>) {
     return VarStmt(id, expr)
   }
 
-  private fun function(kind: String): Stmt {
+  private fun function(kind: String): Function {
     val name = consume(TokenType.IDENTIFIER, "Expected $kind name")
     consume(TokenType.LEFT_PAREN, "Expected '(' after $kind name")
     val parameters = ArrayList<Token>()

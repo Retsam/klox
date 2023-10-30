@@ -23,6 +23,8 @@ sealed interface Stmt : StmtExpr
 
 class BlockStmt(val statements: List<Stmt>) : Stmt
 
+class ClassStmt(val name: Token, val methods: List<Function>) : Stmt
+
 class Function(val name: Token, val parameters: List<Token>, val body: List<Stmt>) : Stmt
 
 class IfStmt(val condition: Expr, val thenBranch: Stmt, val elseBranch: Stmt?) : Stmt

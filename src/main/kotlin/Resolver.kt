@@ -89,6 +89,10 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
         }
         expr.value?.let { resolve(it) }
       }
+      is ClassStmt -> {
+        declare(expr.name)
+        define(expr.name)
+      }
 
       // no interesting logic, just tree walking
       is Binary -> {
