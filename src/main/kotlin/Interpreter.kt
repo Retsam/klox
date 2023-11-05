@@ -85,14 +85,14 @@ class LoxCallableFunction(private val func: Function, private val enclosure: Env
 
 class LoxInstance(val clazz: LoxClass) {
   val fields = HashMap<String, Any?>()
-  val methods = HashMap<String, LoxCallable>()
+
   fun get(name: Token): Any? {
     val key = name.lexeme
     if (fields.containsKey(key)) {
       return fields[key]
     }
-    if (methods.containsKey(key)) {
-      return methods[key]
+    if (clazz.methods.containsKey(key)) {
+      return clazz.methods[key]
     }
     throw Interpreter.RuntimeError(name, "Undefined property '${key}'.")
   }
@@ -102,7 +102,7 @@ class LoxInstance(val clazz: LoxClass) {
   }
 }
 
-class LoxClass(val name: Token) : LoxCallable {
+class LoxClass(val name: Token, val methods: HashMap<String, LoxCallable>) : LoxCallable {
   override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
     return LoxInstance(this)
   }
@@ -190,7 +190,11 @@ class Interpreter {
         }
       }
       is ClassStmt -> {
-        environment.assign(stmt.name.lexeme, LoxClass(stmt.name))
+        val methods = HashMap<String, LoxCallable>()
+        for (method in stmt.methods) {
+          methods[method.name.lexeme] = LoxCallableFunction(method, environment)
+        }
+        environment.assign(stmt.name.lexeme, LoxClass(stmt.name, methods))
       }
       is ExpressionStmt -> {
         evaluate(stmt.expr)

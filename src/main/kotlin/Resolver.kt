@@ -92,6 +92,9 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
       is ClassStmt -> {
         declare(expr.name)
         define(expr.name)
+        for (method in expr.methods) {
+          resolve(method)
+        }
       }
 
       // no interesting logic, just tree walking

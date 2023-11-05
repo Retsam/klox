@@ -9,4 +9,5 @@ class Breakfast {
 }
 
 var brekkie = Breakfast();
-print brekkie;
+brekkie.cook();
+brekkie.serve("Mary");
