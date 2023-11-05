@@ -9,6 +9,8 @@ class Binary(val left: Expr, val operator: Token, val right: Expr) : Expr
 
 class FunctionCall(val primary: Expr, val paren: Token, val arguments: List<Expr>) : Expr
 
+class Get(val primary: Expr, val name: Token) : Expr
+
 class Grouping(val expression: Expr) : Expr
 
 class Literal(val value: Any?) : Expr

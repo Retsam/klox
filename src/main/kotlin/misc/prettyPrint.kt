@@ -7,6 +7,7 @@ import ClassStmt
 import ExpressionStmt
 import Function
 import FunctionCall
+import Get
 import Grouping
 import IfStmt
 import Literal
@@ -40,6 +41,7 @@ fun prettyPrint(expr: StmtExpr): String {
           "nil"
         } else expr.value.toString()
     is Logical -> parenthesize(expr.operator.lexeme, expr.left, expr.right)
+    is Get -> parenthesize(".", expr.primary, Literal(expr.name))
     is Variable -> expr.name.lexeme
     is Unary -> parenthesize(expr.operator.lexeme, expr.right)
 

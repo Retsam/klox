@@ -328,11 +328,15 @@ class Parser(private val tokens: List<Token>) {
   private fun call(): Expr {
     var expr = primary()
     while (true) {
-      if (match(TokenType.LEFT_PAREN)) {
-        expr = finishCall(expr)
-      } else {
-        break
-      }
+      expr =
+          if (match(TokenType.LEFT_PAREN)) {
+            finishCall(expr)
+          } else if (match(TokenType.DOT)) {
+            val name = consume(TokenType.IDENTIFIER, "Expect property name after '.'.")
+            Get(expr, name)
+          } else {
+            break
+          }
     }
     return expr
   }

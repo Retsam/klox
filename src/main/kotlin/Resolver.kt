@@ -109,6 +109,9 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
         resolve(expr.left)
         resolve(expr.right)
       }
+      is Get -> {
+        resolve(expr.primary)
+      }
       is Unary -> resolve(expr.right)
 
       // Statements

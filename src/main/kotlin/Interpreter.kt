@@ -84,6 +84,19 @@ class LoxCallableFunction(private val func: Function, private val enclosure: Env
 }
 
 class LoxInstance(val clazz: LoxClass) {
+  val fields = HashMap<String, Any?>()
+  val methods = HashMap<String, LoxCallable>()
+  fun get(name: Token): Any? {
+    val key = name.lexeme
+    if (fields.containsKey(key)) {
+      return fields[key]
+    }
+    if (methods.containsKey(key)) {
+      return methods[key]
+    }
+    throw Interpreter.RuntimeError(name, "Undefined property '${key}'.")
+  }
+
   override fun toString(): String {
     return "<instance ${clazz.name.lexeme}>"
   }
@@ -239,6 +252,13 @@ class Interpreter {
       is Grouping -> evaluate(expr.expression)
       is Literal -> expr.value
       is Logical -> logicalOperation(expr)
+      is Get -> {
+        val lhs = evaluate(expr.primary)
+        if (lhs !is LoxInstance) {
+          throw RuntimeError(expr.name, "Only instances have properties.")
+        }
+        return lhs.get(expr.name)
+      }
       is Variable -> lookupVariable(expr)
       is Unary -> unaryOperation(expr.operator, evaluate(expr.right))
     }
