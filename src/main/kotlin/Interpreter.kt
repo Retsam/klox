@@ -253,15 +253,24 @@ class Interpreter {
         }
         return callee.call(this, arguments)
       }
-      is Grouping -> evaluate(expr.expression)
-      is Literal -> expr.value
-      is Logical -> logicalOperation(expr)
       is Get -> {
         val lhs = evaluate(expr.primary)
         if (lhs !is LoxInstance) {
           throw RuntimeError(expr.name, "Only instances have properties.")
         }
         return lhs.get(expr.name)
+      }
+      is Grouping -> evaluate(expr.expression)
+      is Literal -> expr.value
+      is Logical -> logicalOperation(expr)
+      is SetExpr -> {
+        val lhs = evaluate(expr.primary)
+        if (lhs !is LoxInstance) {
+          throw RuntimeError(expr.name, "Only instances have fields.")
+        }
+        val value = evaluate(expr.value)
+        lhs.fields[expr.name.lexeme] = value
+        value
       }
       is Variable -> lookupVariable(expr)
       is Unary -> unaryOperation(expr.operator, evaluate(expr.right))

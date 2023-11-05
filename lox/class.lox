@@ -9,5 +9,6 @@ class Breakfast {
 }
 
 var brekkie = Breakfast();
+brekkie.diner = "Mary";
 brekkie.cook();
-brekkie.serve("Mary");
+brekkie.serve(brekkie.diner);

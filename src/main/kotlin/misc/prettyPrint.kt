@@ -14,6 +14,7 @@ import Literal
 import Logical
 import PrintStmt
 import ReturnStmt
+import SetExpr
 import StmtExpr
 import Unary
 import VarStmt
@@ -35,13 +36,14 @@ fun prettyPrint(expr: StmtExpr): String {
             *expr.body.toTypedArray())
     is FunctionCall -> parenthesize("call", expr.primary, *expr.arguments.toTypedArray())
     is Binary -> parenthesize(expr.operator.lexeme, expr.left, expr.right)
+    is Get -> parenthesize(".", expr.primary, Literal(expr.name))
     is Grouping -> parenthesize("group", expr.expression)
     is Literal ->
         if (expr.value == null) {
           "nil"
         } else expr.value.toString()
     is Logical -> parenthesize(expr.operator.lexeme, expr.left, expr.right)
-    is Get -> parenthesize(".", expr.primary, Literal(expr.name))
+    is SetExpr -> parenthesize("=", expr.primary, Literal(expr.name), expr.value)
     is Variable -> expr.name.lexeme
     is Unary -> parenthesize(expr.operator.lexeme, expr.right)
 

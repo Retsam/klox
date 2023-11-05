@@ -106,13 +106,16 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
         resolve(expr.primary)
         expr.arguments.forEach { resolve(it) }
       }
+      is Get -> {
+        resolve(expr.primary)
+      }
       is Grouping -> resolve(expr.expression)
       is Literal -> {}
       is Logical -> {
         resolve(expr.left)
         resolve(expr.right)
       }
-      is Get -> {
+      is SetExpr -> {
         resolve(expr.primary)
       }
       is Unary -> resolve(expr.right)

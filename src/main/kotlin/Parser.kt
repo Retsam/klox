@@ -237,6 +237,9 @@ class Parser(private val tokens: List<Token>) {
         val name = expr.name
         return Assign(name, value)
       }
+      if (expr is Get) {
+        return SetExpr(expr.primary, expr.name, value)
+      }
       error(equals, "Invalid assignment target.")
     }
     return expr
