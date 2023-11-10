@@ -377,6 +377,7 @@ class Parser(private val tokens: List<Token>) {
         consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
         Grouping(expr)
       }
+      match(TokenType.THIS) -> This(previous())
       else -> {
         throw error(peek(), "Expected expression.")
       }

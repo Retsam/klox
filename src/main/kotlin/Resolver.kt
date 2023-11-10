@@ -92,9 +92,13 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
       is ClassStmt -> {
         declare(expr.name)
         define(expr.name)
+
+        pushScope()
+        scopes.first()["this"] = true
         for (method in expr.methods) {
           resolve(method)
         }
+        scopes.removeFirst()
       }
 
       // no interesting logic, just tree walking
@@ -111,6 +115,9 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
       }
       is Grouping -> resolve(expr.expression)
       is Literal -> {}
+      is This -> {
+        resolveLocal(expr, expr.keyword)
+      }
       is Logical -> {
         resolve(expr.left)
         resolve(expr.right)

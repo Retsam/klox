@@ -99,4 +99,13 @@ internal class ScriptTests {
         "[line 3] Error at 'a': Variable with this name already declared in this scope.\n" +
             "[line 6] Error at 'return': Cannot return from top-level code.\n")
   }
+  @Test
+  fun clazz() {
+    runFile("class.lox", "Eggs a-fryin'!\n" + "Enjoy your breakfast, Mary.\n")
+  }
+
+  @Test
+  fun thiz() {
+    runFile("this.lox", "The German chocolate cake is delicious!\n")
+  }
 }

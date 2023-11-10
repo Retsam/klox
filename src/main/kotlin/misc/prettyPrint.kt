@@ -16,6 +16,7 @@ import PrintStmt
 import ReturnStmt
 import SetExpr
 import StmtExpr
+import This
 import Unary
 import VarStmt
 import Variable
@@ -44,6 +45,7 @@ fun prettyPrint(expr: StmtExpr): String {
         } else expr.value.toString()
     is Logical -> parenthesize(expr.operator.lexeme, expr.left, expr.right)
     is SetExpr -> parenthesize("=", expr.primary, Literal(expr.name), expr.value)
+    is This -> "this"
     is Variable -> expr.name.lexeme
     is Unary -> parenthesize(expr.operator.lexeme, expr.right)
 

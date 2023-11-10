@@ -81,9 +81,15 @@ class LoxCallableFunction(private val func: Function, private val enclosure: Env
   override fun toString(): String {
     return "<fn ${func.name.lexeme}>"
   }
+
+  fun bind(instance: LoxInstance): LoxCallableFunction {
+    val environment = Environment(enclosure)
+    environment.assign("this", instance)
+    return LoxCallableFunction(func, environment)
+  }
 }
 
-class LoxInstance(val clazz: LoxClass) {
+class LoxInstance(private val clazz: LoxClass) {
   val fields = HashMap<String, Any?>()
 
   fun get(name: Token): Any? {
@@ -92,7 +98,7 @@ class LoxInstance(val clazz: LoxClass) {
       return fields[key]
     }
     if (clazz.methods.containsKey(key)) {
-      return clazz.methods[key]
+      return clazz.methods[key]?.bind(this)
     }
     throw Interpreter.RuntimeError(name, "Undefined property '${key}'.")
   }
@@ -102,8 +108,8 @@ class LoxInstance(val clazz: LoxClass) {
   }
 }
 
-class LoxClass(val name: Token, val methods: HashMap<String, LoxCallable>) : LoxCallable {
-  override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
+class LoxClass(val name: Token, val methods: HashMap<String, LoxCallableFunction>) : LoxCallable {
+  override fun call(interpreter: Interpreter, arguments: List<Any?>): LoxInstance {
     return LoxInstance(this)
   }
 
@@ -140,10 +146,10 @@ class Interpreter {
   // Maps from the expression to the distance from the current scope
   private val locals: MutableMap<Expr, Int> = HashMap()
 
-  private fun lookupVariable(expr: Variable): Any? {
+  private fun lookupVariable(name: Token, expr: Expr): Any? {
     return when (val distance = locals[expr]) {
-      null -> globals.get(expr.name)
-      else -> environment.getAt(distance, expr.name.lexeme)
+      null -> globals.get(name)
+      else -> environment.getAt(distance, name.lexeme)
     }
   }
 
@@ -190,7 +196,7 @@ class Interpreter {
         }
       }
       is ClassStmt -> {
-        val methods = HashMap<String, LoxCallable>()
+        val methods = HashMap<String, LoxCallableFunction>()
         for (method in stmt.methods) {
           methods[method.name.lexeme] = LoxCallableFunction(method, environment)
         }
@@ -272,7 +278,10 @@ class Interpreter {
         lhs.fields[expr.name.lexeme] = value
         value
       }
-      is Variable -> lookupVariable(expr)
+      is This -> {
+        lookupVariable(expr.keyword, expr)
+      }
+      is Variable -> lookupVariable(expr.name, expr)
       is Unary -> unaryOperation(expr.operator, evaluate(expr.right))
     }
   }
