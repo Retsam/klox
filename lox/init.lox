@@ -1,0 +1,19 @@
+class Init {
+  init() {
+    this.val = 0;
+  }
+}
+
+var obj = Init();
+print(obj.val);
+print(obj.init());
+
+class InitReturn {
+  init() {
+    this.val = 0;
+    return;
+  }
+}
+
+obj = InitReturn();
+print(obj.init().val);

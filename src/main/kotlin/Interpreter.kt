@@ -55,8 +55,11 @@ interface LoxCallable {
 
 class Return(val value: Any?) : RuntimeException(null, null, false, false)
 
-class LoxCallableFunction(private val func: Function, private val enclosure: Environment?) :
-    LoxCallable {
+class LoxCallableFunction(
+    private val func: Function,
+    private val enclosure: Environment,
+    private val isInitializer: Boolean
+) : LoxCallable {
   override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
     val scope = interpreter.environment
     try {
@@ -66,6 +69,7 @@ class LoxCallableFunction(private val func: Function, private val enclosure: Env
       }
       interpreter.interpret(func.body)
     } catch (e: Return) {
+      if (isInitializer) return enclosure.getAt(0, "this")
       return e.value
     } finally {
       interpreter.environment = scope
@@ -85,7 +89,7 @@ class LoxCallableFunction(private val func: Function, private val enclosure: Env
   fun bind(instance: LoxInstance): LoxCallableFunction {
     val environment = Environment(enclosure)
     environment.assign("this", instance)
-    return LoxCallableFunction(func, environment)
+    return LoxCallableFunction(func, environment, isInitializer)
   }
 }
 
@@ -110,10 +114,17 @@ class LoxInstance(private val clazz: LoxClass) {
 
 class LoxClass(val name: Token, val methods: HashMap<String, LoxCallableFunction>) : LoxCallable {
   override fun call(interpreter: Interpreter, arguments: List<Any?>): LoxInstance {
-    return LoxInstance(this)
+    val instance = LoxInstance(this)
+    val initializer = methods["init"]
+    initializer?.bind(instance)?.call(interpreter, arguments)
+    return instance
   }
 
   override fun arity(): Int {
+    val initializer = methods["init"]
+    if (initializer != null) {
+      return initializer.arity()
+    }
     return 0
   }
 
@@ -198,7 +209,8 @@ class Interpreter {
       is ClassStmt -> {
         val methods = HashMap<String, LoxCallableFunction>()
         for (method in stmt.methods) {
-          methods[method.name.lexeme] = LoxCallableFunction(method, environment)
+          methods[method.name.lexeme] =
+              LoxCallableFunction(method, environment, method.name.lexeme == "init")
         }
         environment.assign(stmt.name.lexeme, LoxClass(stmt.name, methods))
       }
@@ -206,7 +218,7 @@ class Interpreter {
         evaluate(stmt.expr)
       }
       is Function -> {
-        environment.assign(stmt.name.lexeme, LoxCallableFunction(stmt, environment))
+        environment.assign(stmt.name.lexeme, LoxCallableFunction(stmt, environment, false))
       }
       is IfStmt -> {
         if (isTruthy(evaluate(stmt.condition))) {

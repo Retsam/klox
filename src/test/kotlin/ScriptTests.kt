@@ -108,4 +108,9 @@ internal class ScriptTests {
   fun thiz() {
     runFile("this.lox", "The German chocolate cake is delicious!\n")
   }
+
+  @Test
+  fun init() {
+    runFile("init.lox", "0\nnil\n0\n")
+  }
 }
