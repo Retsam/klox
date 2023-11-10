@@ -108,9 +108,23 @@ internal class ScriptTests {
   fun thiz() {
     runFile("this.lox", "The German chocolate cake is delicious!\n")
   }
+  @Test
+  fun this_error() {
+    runFileWithError(
+        "this_error.lox",
+        "[line 1] Error at 'this': Cannot use 'this' outside of a class.\n" +
+            "[line 4] Error at 'this': Cannot use 'this' outside of a class.\n")
+  }
 
   @Test
   fun init() {
     runFile("init.lox", "0\nnil\n0\n")
+  }
+
+  @Test
+  fun init_error() {
+    runFileWithError(
+        "init_error.lox",
+        "[line 3] Error at 'return': Cannot return a value from an initializer.\n")
   }
 }

@@ -1,12 +1,20 @@
 enum class FunctionType {
   NONE,
   FUNCTION,
+  METHOD,
+  INITIALIZER,
+}
+
+enum class ClassType {
+  NONE,
+  CLASS,
 }
 
 class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
 
   private val scopes = ArrayDeque<MutableMap<String, Boolean>>() // true if variable is initialized
   private var currentFunction = FunctionType.NONE
+  private var currentClass = ClassType.NONE
 
   init {
     program.forEach { resolve(it) }
@@ -78,7 +86,10 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
           define(it)
         }
         val prevFunction = currentFunction
-        currentFunction = FunctionType.FUNCTION
+        currentFunction =
+            if (currentClass == ClassType.CLASS)
+                if (expr.name.lexeme == "init") FunctionType.INITIALIZER else FunctionType.METHOD
+            else FunctionType.FUNCTION
         expr.body.forEach { resolve(it) }
         currentFunction = prevFunction
         popScope()
@@ -87,18 +98,24 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
         if (currentFunction == FunctionType.NONE) {
           tokenError(expr.keyword, "Cannot return from top-level code.")
         }
+        if (currentFunction == FunctionType.INITIALIZER && expr.value != null) {
+          tokenError(expr.keyword, "Cannot return a value from an initializer.")
+        }
         expr.value?.let { resolve(it) }
       }
       is ClassStmt -> {
         declare(expr.name)
         define(expr.name)
 
+        val prevClass = currentClass
+        currentClass = ClassType.CLASS
         pushScope()
         scopes.first()["this"] = true
         for (method in expr.methods) {
           resolve(method)
         }
         scopes.removeFirst()
+        currentClass = prevClass
       }
 
       // no interesting logic, just tree walking
@@ -116,6 +133,9 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
       is Grouping -> resolve(expr.expression)
       is Literal -> {}
       is This -> {
+        if (currentClass == ClassType.NONE) {
+          tokenError(expr.keyword, "Cannot use 'this' outside of a class.")
+        }
         resolveLocal(expr, expr.keyword)
       }
       is Logical -> {

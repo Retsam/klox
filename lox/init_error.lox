@@ -1,0 +1,5 @@
+class InitReturn {
+  init() {
+    return 0;
+  }
+}
