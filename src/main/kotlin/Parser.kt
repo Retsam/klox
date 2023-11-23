@@ -88,6 +88,9 @@ class Parser(private val tokens: List<Token>) {
     val superclass =
         if (match(TokenType.LESS)) {
           consume(TokenType.IDENTIFIER, "Expected superclass name")
+          if (previous().lexeme == name.lexeme) {
+            error(previous(), "A class can't inherit from itself.")
+          }
           Variable(previous())
         } else {
           null
