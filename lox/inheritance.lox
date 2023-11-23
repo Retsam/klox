@@ -1,0 +1,16 @@
+class Animal {
+    init(name) {
+        this.name = name;
+    }
+    speak() {
+        print(this.name + " makes a noise.");
+    }
+}
+
+class Cat < Animal {
+    speak() {
+        print(this.name + " meows.");
+    }
+}
+
+Cat("Linus").speak();

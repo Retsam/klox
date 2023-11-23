@@ -84,13 +84,23 @@ class Parser(private val tokens: List<Token>) {
 
   private fun classDeclaration(): Stmt {
     val name = consume(TokenType.IDENTIFIER, "Expected class name")
+
+    val superclass =
+        if (match(TokenType.LESS)) {
+          consume(TokenType.IDENTIFIER, "Expected superclass name")
+          Variable(previous())
+        } else {
+          null
+        }
+
     consume(TokenType.LEFT_BRACE, "Expected '{' before class body")
     val methods = ArrayList<Function>()
     while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
       methods.add(function("method"))
     }
     consume(TokenType.RIGHT_BRACE, "Expected '}' after class body")
-    return ClassStmt(name, methods)
+
+    return ClassStmt(name, superclass, methods)
   }
 
   private fun varStatement(): Stmt {

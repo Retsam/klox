@@ -25,7 +25,10 @@ import WhileStmt
 fun prettyPrint(expr: StmtExpr): String {
   return when (expr) {
     is Assign -> parenthesize("=", expr, expr.value)
-    is ClassStmt -> parenthesize("class ${expr.name.lexeme}", *expr.methods.toTypedArray())
+    is ClassStmt -> {
+      val superClause = if (expr.superclass != null) " < ${expr.superclass.name.lexeme}" else ""
+      parenthesize("class ${expr.name.lexeme}${superClause}", *expr.methods.toTypedArray())
+    }
     is Function ->
         parenthesize(
             "fun ${expr.name.lexeme} ${

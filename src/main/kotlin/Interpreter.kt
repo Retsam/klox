@@ -101,8 +101,9 @@ class LoxInstance(private val clazz: LoxClass) {
     if (fields.containsKey(key)) {
       return fields[key]
     }
-    if (clazz.methods.containsKey(key)) {
-      return clazz.methods[key]?.bind(this)
+    val method = clazz.getMethod(key)
+    if (method != null) {
+      return method.bind(this)
     }
     throw Interpreter.RuntimeError(name, "Undefined property '${key}'.")
   }
@@ -112,16 +113,29 @@ class LoxInstance(private val clazz: LoxClass) {
   }
 }
 
-class LoxClass(val name: Token, val methods: HashMap<String, LoxCallableFunction>) : LoxCallable {
+class LoxClass(
+    val name: Token,
+    private val superClass: LoxClass?,
+    private val methods: HashMap<String, LoxCallableFunction>
+) : LoxCallable {
+
+  fun getMethod(name: String): LoxCallableFunction? {
+    if (methods.containsKey(name)) {
+      return methods[name]
+    }
+    if (superClass != null) {
+      return superClass.getMethod(name)
+    }
+    return null
+  }
   override fun call(interpreter: Interpreter, arguments: List<Any?>): LoxInstance {
     val instance = LoxInstance(this)
-    val initializer = methods["init"]
-    initializer?.bind(instance)?.call(interpreter, arguments)
+    getMethod("init")?.bind(instance)?.call(interpreter, arguments)
     return instance
   }
 
   override fun arity(): Int {
-    val initializer = methods["init"]
+    val initializer = getMethod("init")
     if (initializer != null) {
       return initializer.arity()
     }
@@ -212,7 +226,15 @@ class Interpreter {
           methods[method.name.lexeme] =
               LoxCallableFunction(method, environment, method.name.lexeme == "init")
         }
-        environment.assign(stmt.name.lexeme, LoxClass(stmt.name, methods))
+        val superClass =
+            stmt.superclass?.let {
+              val value = evaluate(it)
+              if (value !is LoxClass) {
+                throw RuntimeError(stmt.superclass.name, "Superclass must be a class.")
+              }
+              value
+            }
+        environment.assign(stmt.name.lexeme, LoxClass(stmt.name, superClass, methods))
       }
       is ExpressionStmt -> {
         evaluate(stmt.expr)
