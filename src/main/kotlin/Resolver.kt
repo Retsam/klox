@@ -144,6 +144,7 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
       }
       is SetExpr -> {
         resolve(expr.primary)
+        resolve(expr.value)
       }
       is Unary -> resolve(expr.right)
 
