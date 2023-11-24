@@ -9,6 +9,7 @@ class Animal {
 
 class Cat < Animal {
     speak() {
+        super.speak();
         print(this.name + " meows.");
     }
 }

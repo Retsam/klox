@@ -20,8 +20,8 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
     program.forEach { resolve(it) }
   }
 
-  private fun pushScope() {
-    scopes.addFirst(mutableMapOf())
+  private fun pushScope(vararg pairs: Pair<String, Boolean>) {
+    scopes.addFirst(mutableMapOf(*pairs))
   }
   private fun popScope() {
     scopes.removeFirst()
@@ -109,12 +109,18 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
 
         val prevClass = currentClass
         currentClass = ClassType.CLASS
-        pushScope()
-        scopes.first()["this"] = true
+
+        expr.superclass?.let {
+          resolve(it)
+          pushScope(Pair("super", true))
+        }
+
+        pushScope(Pair("this", true))
         for (method in expr.methods) {
           resolve(method)
         }
         scopes.removeFirst()
+        if (expr.superclass != null) scopes.removeFirst()
         currentClass = prevClass
       }
 
@@ -145,6 +151,12 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
       is SetExpr -> {
         resolve(expr.primary)
         resolve(expr.value)
+      }
+      is Super -> {
+        if (currentClass == ClassType.NONE) {
+          tokenError(expr.keyword, "Cannot use 'super' outside of a class.")
+        }
+        resolveLocal(expr, expr.keyword)
       }
       is Unary -> resolve(expr.right)
 

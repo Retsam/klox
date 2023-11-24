@@ -393,6 +393,12 @@ class Parser(private val tokens: List<Token>) {
         Grouping(expr)
       }
       match(TokenType.THIS) -> This(previous())
+      match(TokenType.SUPER) -> {
+        val token = previous()
+        consume(TokenType.DOT, "Expected . to follow super")
+        consume(TokenType.IDENTIFIER, "Expected a method name to follow `super.`")
+        Super(token, previous())
+      }
       else -> {
         throw error(peek(), "Expected expression.")
       }

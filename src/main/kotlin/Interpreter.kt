@@ -221,19 +221,25 @@ class Interpreter {
         }
       }
       is ClassStmt -> {
+        val prevEnvironment = environment
+        val superClass =
+            stmt.superclass?.let {
+              val superClass = evaluate(it)
+              if (superClass !is LoxClass) {
+                throw RuntimeError(stmt.superclass.name, "Superclass must be a class.")
+              }
+              environment = Environment(environment)
+              environment.assign("super", superClass)
+
+              superClass
+            }
+
         val methods = HashMap<String, LoxCallableFunction>()
         for (method in stmt.methods) {
           methods[method.name.lexeme] =
               LoxCallableFunction(method, environment, method.name.lexeme == "init")
         }
-        val superClass =
-            stmt.superclass?.let {
-              val value = evaluate(it)
-              if (value !is LoxClass) {
-                throw RuntimeError(stmt.superclass.name, "Superclass must be a class.")
-              }
-              value
-            }
+        environment = prevEnvironment // Might be a noop if we didn't have a superclass
         environment.assign(stmt.name.lexeme, LoxClass(stmt.name, superClass, methods))
       }
       is ExpressionStmt -> {
@@ -311,6 +317,18 @@ class Interpreter {
         val value = evaluate(expr.value)
         lhs.fields[expr.name.lexeme] = value
         value
+      }
+      is Super -> {
+        val distance = locals[expr]
+        assert(distance != null && distance > 0) {
+          "Assertion failed: invalid distance resolving variable."
+        }
+        val superClass = environment.getAt(distance!!, "super") as LoxClass
+        val instance = environment.getAt(distance - 1, "this") as LoxInstance
+        val method =
+            superClass.getMethod(expr.method.lexeme)?.bind(instance)
+                ?: throw RuntimeError(expr.method, "Undefined property '${expr.method.lexeme}'.")
+        method
       }
       is This -> {
         lookupVariable(expr.keyword, expr)
