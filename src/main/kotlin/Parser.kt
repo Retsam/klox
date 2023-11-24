@@ -129,7 +129,7 @@ class Parser(private val tokens: List<Token>) {
         parameters.add(consume(TokenType.IDENTIFIER, "Expected parameter name"))
       } while (match(TokenType.COMMA))
     }
-    consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters")
+    consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.")
     consume(TokenType.LEFT_BRACE, "Expect '{' before $kind body")
     val body = block()
     return Function(name, parameters, body)

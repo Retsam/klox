@@ -67,15 +67,15 @@ fun run(source: String) {
 }
 
 private fun report(line: Int, where: String, message: String) {
-  System.err.println("[line $line] Error $where: $message")
+  System.err.println("[line $line] Error$where: $message")
   hadError = true
 }
 
 fun tokenError(token: Token, message: String) {
   if (token.type == TokenType.EOF) {
-    report(token.line, "at end", message)
+    report(token.line, " at end", message)
   } else {
-    report(token.line, "at '${token.lexeme}'", message)
+    report(token.line, " at '${token.lexeme}'", message)
   }
 }
 

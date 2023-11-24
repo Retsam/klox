@@ -61,18 +61,15 @@ class Scanner(private val code: String) {
         }
         addToken(TokenType.SLASH)
       }
-
       ' ',
       '\r',
       '\t' -> {
         return
       }
-
       '\n' -> {
         line++
         return
       }
-
       '"' -> string()
       in '0'..'9' -> number()
       else -> {
@@ -82,6 +79,8 @@ class Scanner(private val code: String) {
           }
           val lexeme = code.substring(start, current)
           asKeywordToken(lexeme)?.let { tokens += it } ?: addToken(TokenType.IDENTIFIER)
+        } else {
+          error(line, "Unexpected character.")
         }
       }
     }
@@ -94,7 +93,6 @@ class Scanner(private val code: String) {
           addToken(TokenType.STRING, code.substring(start + 1, current - 1))
           return
         }
-
         '\n' -> {
           line++
         }

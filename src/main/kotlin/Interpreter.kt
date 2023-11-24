@@ -1,7 +1,15 @@
 class Environment(private val enclosure: Environment? = null) {
   private val values = HashMap<String, Any?>()
 
-  fun assign(name: String, value: Any?): Environment {
+  fun declare(name: String, value: Any?): Environment {
+    values[name] = value
+    return this
+  }
+
+  fun assign(token: Token, value: Any?): Environment {
+    val name = token.lexeme
+    if (!values.containsKey(name))
+        throw Interpreter.RuntimeError(token, "Undefined variable '${name}'.")
     values[name] = value
     return this
   }
@@ -65,7 +73,7 @@ class LoxCallableFunction(
     try {
       interpreter.environment = Environment(enclosure)
       for (i in func.parameters.indices) {
-        interpreter.environment.assign(func.parameters[i].lexeme, arguments[i])
+        interpreter.environment.declare(func.parameters[i].lexeme, arguments[i])
       }
       interpreter.interpret(func.body)
     } catch (e: Return) {
@@ -88,7 +96,7 @@ class LoxCallableFunction(
 
   fun bind(instance: LoxInstance): LoxCallableFunction {
     val environment = Environment(enclosure)
-    environment.assign("this", instance)
+    environment.declare("this", instance)
     return LoxCallableFunction(func, environment, isInitializer)
   }
 }
@@ -150,7 +158,7 @@ class LoxClass(
 class Interpreter {
   var environment =
       Environment()
-          .assign(
+          .declare(
               "clock",
               object : LoxCallable {
                 override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
@@ -229,7 +237,7 @@ class Interpreter {
                 throw RuntimeError(stmt.superclass.name, "Superclass must be a class.")
               }
               environment = Environment(environment)
-              environment.assign("super", superClass)
+              environment.declare("super", superClass)
 
               superClass
             }
@@ -240,13 +248,13 @@ class Interpreter {
               LoxCallableFunction(method, environment, method.name.lexeme == "init")
         }
         environment = prevEnvironment // Might be a noop if we didn't have a superclass
-        environment.assign(stmt.name.lexeme, LoxClass(stmt.name, superClass, methods))
+        environment.declare(stmt.name.lexeme, LoxClass(stmt.name, superClass, methods))
       }
       is ExpressionStmt -> {
         evaluate(stmt.expr)
       }
       is Function -> {
-        environment.assign(stmt.name.lexeme, LoxCallableFunction(stmt, environment, false))
+        environment.declare(stmt.name.lexeme, LoxCallableFunction(stmt, environment, false))
       }
       is IfStmt -> {
         if (isTruthy(evaluate(stmt.condition))) {
@@ -264,7 +272,7 @@ class Interpreter {
       }
       is VarStmt -> {
         val value = evaluate(stmt.expr)
-        environment.assign(stmt.identifier.lexeme, value)
+        environment.declare(stmt.identifier.lexeme, value)
       }
       is WhileStmt -> {
         while (isTruthy(evaluate(stmt.condition))) {
@@ -279,7 +287,7 @@ class Interpreter {
       is Assign -> {
         val value = evaluate(expr.value)
         when (val distance = locals[expr]) {
-          null -> globals.assign(expr.name.lexeme, value)
+          null -> globals.assign(expr.name, value)
           else -> environment.assignAt(distance, expr.name.lexeme, value)
         }
         value

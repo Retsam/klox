@@ -90,6 +90,11 @@ internal class ScriptTests {
   fun counter() {
     runFile("counter.lox", "1\n2\n")
   }
+
+  @Test
+  fun assign_error() {
+    runFileWithError("assign_error.lox", "Undefined variable 'unknown'.\n" + "[line 1]\n")
+  }
   @Test
   fun resolution() {
     runFile("resolution.lox", "global\nglobal\n")
