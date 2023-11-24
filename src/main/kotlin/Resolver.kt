@@ -8,6 +8,7 @@ enum class FunctionType {
 enum class ClassType {
   NONE,
   CLASS,
+  SUBCLASS,
 }
 
 class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
@@ -87,7 +88,7 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
         }
         val prevFunction = currentFunction
         currentFunction =
-            if (currentClass == ClassType.CLASS)
+            if (currentClass != ClassType.NONE)
                 if (expr.name.lexeme == "init") FunctionType.INITIALIZER else FunctionType.METHOD
             else FunctionType.FUNCTION
         expr.body.forEach { resolve(it) }
@@ -111,6 +112,7 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
         currentClass = ClassType.CLASS
 
         expr.superclass?.let {
+          currentClass = ClassType.SUBCLASS
           resolve(it)
           pushScope(Pair("super", true))
         }
@@ -155,6 +157,8 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
       is Super -> {
         if (currentClass == ClassType.NONE) {
           tokenError(expr.keyword, "Cannot use 'super' outside of a class.")
+        } else if (currentClass != ClassType.SUBCLASS) {
+          tokenError(expr.keyword, "Cannot use 'super' in a class with no superclass.")
         }
         resolveLocal(expr, expr.keyword)
       }

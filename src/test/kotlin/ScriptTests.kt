@@ -127,4 +127,17 @@ internal class ScriptTests {
         "init_error.lox",
         "[line 3] Error at 'return': Cannot return a value from an initializer.\n")
   }
+
+  @Test
+  fun inheritance() {
+    runFile("inheritance.lox", "Linus makes a noise.\nLinus meows.\n")
+  }
+
+  @Test
+  fun inheritance_error() {
+    runFileWithError(
+        "inheritance_error.lox",
+        "[line 3] Error at 'super': Cannot use 'super' in a class with no superclass.\n" +
+            "[line 6] Error at 'super': Cannot use 'super' outside of a class.\n")
+  }
 }

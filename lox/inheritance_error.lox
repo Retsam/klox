@@ -1,0 +1,6 @@
+class Base {
+  method() {
+    super.method();
+  }
+}
+super.method();
