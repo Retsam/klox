@@ -1,0 +1,6 @@
+file_to_run=`readlink -f $1`
+
+parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+cd "$parent_path"
+
+java -jar out/artifacts/klox_jar/klox.jar $file_to_run
