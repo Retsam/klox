@@ -109,7 +109,7 @@ class LoxInstance(private val clazz: LoxClass) {
   }
 
   override fun toString(): String {
-    return "<instance ${clazz.name.lexeme}>"
+    return "${clazz.name.lexeme} instance"
   }
 }
 
@@ -143,7 +143,7 @@ class LoxClass(
   }
 
   override fun toString(): String {
-    return "<class ${name.lexeme}>"
+    return name.lexeme
   }
 }
 
@@ -409,7 +409,7 @@ class Interpreter {
 
   private fun checkNumericOperand(operator: Token, operand: Any?): Double {
     if (operand is Double) return operand
-    throw RuntimeError(operator, "Operand must be a number.")
+    throw RuntimeError(operator, "Operands must be numbers.")
   }
 
   private fun isTruthy(operand: Any?): Boolean {

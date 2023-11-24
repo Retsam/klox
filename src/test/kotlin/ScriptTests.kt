@@ -17,9 +17,12 @@ internal class ScriptTests {
     val outputStream = ByteArrayOutputStream()
     val stdout = System.out
     System.setOut(PrintStream(outputStream))
+    val stderr = System.err
+    System.setErr(PrintStream(outputStream))
 
     runFile("lox/$name")
     System.setOut(stdout)
+    System.setErr(stderr)
     return outputStream.toString()
   }
   private fun runFile(name: String, expectedOut: String) {
@@ -96,8 +99,8 @@ internal class ScriptTests {
   fun resolve_error() {
     runFileWithError(
         "resolve_error.lox",
-        "[line 3] Error at 'a': Variable with this name already declared in this scope.\n" +
-            "[line 6] Error at 'return': Cannot return from top-level code.\n")
+        "[line 3] Error at 'a': Already a variable with this name in this scope.\n" +
+            "[line 6] Error at 'return': Can't return from top-level code.\n")
   }
   @Test
   fun clazz() {
@@ -112,8 +115,8 @@ internal class ScriptTests {
   fun this_error() {
     runFileWithError(
         "this_error.lox",
-        "[line 1] Error at 'this': Cannot use 'this' outside of a class.\n" +
-            "[line 4] Error at 'this': Cannot use 'this' outside of a class.\n")
+        "[line 1] Error at 'this': Can't use 'this' outside of a class.\n" +
+            "[line 4] Error at 'this': Can't use 'this' outside of a class.\n")
   }
 
   @Test
@@ -124,8 +127,7 @@ internal class ScriptTests {
   @Test
   fun init_error() {
     runFileWithError(
-        "init_error.lox",
-        "[line 3] Error at 'return': Cannot return a value from an initializer.\n")
+        "init_error.lox", "[line 3] Error at 'return': Can't return a value from an initializer.\n")
   }
 
   @Test
@@ -137,7 +139,7 @@ internal class ScriptTests {
   fun inheritance_error() {
     runFileWithError(
         "inheritance_error.lox",
-        "[line 3] Error at 'super': Cannot use 'super' in a class with no superclass.\n" +
-            "[line 6] Error at 'super': Cannot use 'super' outside of a class.\n")
+        "[line 3] Error at 'super': Can't use 'super' in a class with no superclass.\n" +
+            "[line 6] Error at 'super': Can't use 'super' outside of a class.\n")
   }
 }

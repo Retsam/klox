@@ -57,7 +57,7 @@ class Parser(private val tokens: List<Token>) {
   }
 
   private fun withSemicolon(stmt: Stmt): Stmt {
-    consume(TokenType.SEMICOLON, "Expected ';' after statement")
+    consume(TokenType.SEMICOLON, "Expect ';' after statement")
     return stmt
   }
 
@@ -107,7 +107,7 @@ class Parser(private val tokens: List<Token>) {
   }
 
   private fun varStatement(): Stmt {
-    val id = consume(TokenType.IDENTIFIER, "Expected an identifier")
+    val id = consume(TokenType.IDENTIFIER, "Expect variable name.")
     val expr =
         if (match(TokenType.EQUAL)) {
           expression()
@@ -129,8 +129,8 @@ class Parser(private val tokens: List<Token>) {
         parameters.add(consume(TokenType.IDENTIFIER, "Expected parameter name"))
       } while (match(TokenType.COMMA))
     }
-    consume(TokenType.RIGHT_PAREN, "Expected ')' after parameters")
-    consume(TokenType.LEFT_BRACE, "Expected '{' before $kind body")
+    consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters")
+    consume(TokenType.LEFT_BRACE, "Expect '{' before $kind body")
     val body = block()
     return Function(name, parameters, body)
   }
@@ -395,12 +395,12 @@ class Parser(private val tokens: List<Token>) {
       match(TokenType.THIS) -> This(previous())
       match(TokenType.SUPER) -> {
         val token = previous()
-        consume(TokenType.DOT, "Expected . to follow super")
-        consume(TokenType.IDENTIFIER, "Expected a method name to follow `super.`")
+        consume(TokenType.DOT, "Expect '.' after 'super'.")
+        consume(TokenType.IDENTIFIER, "Expect superclass method name.")
         Super(token, previous())
       }
       else -> {
-        throw error(peek(), "Expected expression.")
+        throw error(peek(), "Expect expression.")
       }
     }
   }

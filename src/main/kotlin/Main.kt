@@ -67,7 +67,7 @@ fun run(source: String) {
 }
 
 private fun report(line: Int, where: String, message: String) {
-  println("[line $line] Error $where: $message")
+  System.err.println("[line $line] Error $where: $message")
   hadError = true
 }
 

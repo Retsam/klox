@@ -31,7 +31,7 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
     if (scopes.isEmpty()) return
     val scope = scopes.first()
     if (scope.containsKey(name.lexeme)) {
-      tokenError(name, "Variable with this name already declared in this scope.")
+      tokenError(name, "Already a variable with this name in this scope.")
     }
     scope[name.lexeme] = false
   }
@@ -61,7 +61,7 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
       }
       is Variable -> {
         if (!scopes.isEmpty() && scopes.last()[expr.name.lexeme] == false) {
-          tokenError(expr.name, "Cannot read local variable in its own initializer.")
+          tokenError(expr.name, "Can't read local variable in its own initializer.")
         }
         resolveLocal(expr, expr.name)
       }
@@ -97,10 +97,10 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
       }
       is ReturnStmt -> {
         if (currentFunction == FunctionType.NONE) {
-          tokenError(expr.keyword, "Cannot return from top-level code.")
+          tokenError(expr.keyword, "Can't return from top-level code.")
         }
         if (currentFunction == FunctionType.INITIALIZER && expr.value != null) {
-          tokenError(expr.keyword, "Cannot return a value from an initializer.")
+          tokenError(expr.keyword, "Can't return a value from an initializer.")
         }
         expr.value?.let { resolve(it) }
       }
@@ -142,7 +142,7 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
       is Literal -> {}
       is This -> {
         if (currentClass == ClassType.NONE) {
-          tokenError(expr.keyword, "Cannot use 'this' outside of a class.")
+          tokenError(expr.keyword, "Can't use 'this' outside of a class.")
         }
         resolveLocal(expr, expr.keyword)
       }
@@ -156,9 +156,9 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
       }
       is Super -> {
         if (currentClass == ClassType.NONE) {
-          tokenError(expr.keyword, "Cannot use 'super' outside of a class.")
+          tokenError(expr.keyword, "Can't use 'super' outside of a class.")
         } else if (currentClass != ClassType.SUBCLASS) {
-          tokenError(expr.keyword, "Cannot use 'super' in a class with no superclass.")
+          tokenError(expr.keyword, "Can't use 'super' in a class with no superclass.")
         }
         resolveLocal(expr, expr.keyword)
       }
