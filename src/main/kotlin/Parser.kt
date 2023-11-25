@@ -87,7 +87,7 @@ class Parser(private val tokens: List<Token>) {
 
     val superclass =
         if (match(TokenType.LESS)) {
-          consume(TokenType.IDENTIFIER, "Expected superclass name")
+          consume(TokenType.IDENTIFIER, "Expect superclass name.")
           if (previous().lexeme == name.lexeme) {
             error(previous(), "A class can't inherit from itself.")
           }
@@ -96,12 +96,12 @@ class Parser(private val tokens: List<Token>) {
           null
         }
 
-    consume(TokenType.LEFT_BRACE, "Expected '{' before class body")
+    consume(TokenType.LEFT_BRACE, "Expected '{' before class body.")
     val methods = ArrayList<Function>()
     while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
       methods.add(function("method"))
     }
-    consume(TokenType.RIGHT_BRACE, "Expected '}' after class body")
+    consume(TokenType.RIGHT_BRACE, "Expected '}' after class body.")
 
     return ClassStmt(name, superclass, methods)
   }
@@ -130,7 +130,7 @@ class Parser(private val tokens: List<Token>) {
       } while (match(TokenType.COMMA))
     }
     consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.")
-    consume(TokenType.LEFT_BRACE, "Expect '{' before $kind body")
+    consume(TokenType.LEFT_BRACE, "Expect '{' before $kind body.")
     val body = block()
     return Function(name, parameters, body)
   }
@@ -207,7 +207,7 @@ class Parser(private val tokens: List<Token>) {
     consume(TokenType.SEMICOLON, "Expected ';' after for condition")
 
     var increment: Expr? = null
-    if (!check(TokenType.SEMICOLON)) {
+    if (!check(TokenType.RIGHT_PAREN)) {
       increment = expression()
     }
     consume(TokenType.RIGHT_PAREN, "Expected ')' after for clauses")
