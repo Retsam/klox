@@ -52,6 +52,23 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
     // Not found. Assume it is global.
   }
 
+  private fun resolveFunction(expr: Function) {
+    // The parameters are declared in the inner scope
+    pushScope()
+    expr.parameters.forEach {
+      declare(it)
+      define(it)
+    }
+    val prevFunction = currentFunction
+    currentFunction =
+        if (currentClass != ClassType.NONE)
+            if (expr.name.lexeme == "init") FunctionType.INITIALIZER else FunctionType.METHOD
+        else FunctionType.FUNCTION
+    expr.body.forEach { resolve(it) }
+    currentFunction = prevFunction
+    popScope()
+  }
+
   private fun resolve(expr: StmtExpr) {
     when (expr) {
       // interesting cases
@@ -76,24 +93,11 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
         popScope()
       }
       is Function -> {
-        // The function itself is declared in the outer scope
+        // Only top-level functions declare variables
         declare(expr.name)
         define(expr.name)
 
-        // The parameters are declared in the inner scope
-        pushScope()
-        expr.parameters.forEach {
-          declare(it)
-          define(it)
-        }
-        val prevFunction = currentFunction
-        currentFunction =
-            if (currentClass != ClassType.NONE)
-                if (expr.name.lexeme == "init") FunctionType.INITIALIZER else FunctionType.METHOD
-            else FunctionType.FUNCTION
-        expr.body.forEach { resolve(it) }
-        currentFunction = prevFunction
-        popScope()
+        resolveFunction(expr)
       }
       is ReturnStmt -> {
         if (currentFunction == FunctionType.NONE) {
@@ -119,7 +123,7 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
 
         pushScope(Pair("this", true))
         for (method in expr.methods) {
-          resolve(method)
+          resolveFunction(method)
         }
         scopes.removeFirst()
         if (expr.superclass != null) scopes.removeFirst()

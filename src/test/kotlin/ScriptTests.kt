@@ -147,4 +147,9 @@ internal class ScriptTests {
         "[line 3] Error at 'super': Can't use 'super' in a class with no superclass.\n" +
             "[line 6] Error at 'super': Can't use 'super' outside of a class.\n")
   }
+
+  @Test
+  fun refer_to_name_error() {
+    runFileWithError("refer_to_name_error.lox", "Undefined variable 'method'.\n" + "[line 3]\n")
+  }
 }

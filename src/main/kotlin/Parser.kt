@@ -57,7 +57,7 @@ class Parser(private val tokens: List<Token>) {
   }
 
   private fun withSemicolon(stmt: Stmt): Stmt {
-    consume(TokenType.SEMICOLON, "Expect ';' after statement")
+    consume(TokenType.SEMICOLON, "Expect ';' after expression.")
     return stmt
   }
 
