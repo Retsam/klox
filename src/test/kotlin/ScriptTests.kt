@@ -126,7 +126,7 @@ internal class ScriptTests {
 
   @Test
   fun init() {
-    runFile("init.lox", "0\nnil\n0\n")
+    runFile("init.lox", "0\nInit instance\n0\n")
   }
 
   @Test
@@ -151,5 +151,12 @@ internal class ScriptTests {
   @Test
   fun refer_to_name_error() {
     runFileWithError("refer_to_name_error.lox", "Undefined variable 'method'.\n" + "[line 3]\n")
+  }
+
+  @Test
+  fun call_init_explicitly() {
+    runFile(
+        "call_init_explicitly.lox",
+        "Foo.init(one)\n" + "Foo.init(two)\n" + "Foo instance\n" + "field\n")
   }
 }

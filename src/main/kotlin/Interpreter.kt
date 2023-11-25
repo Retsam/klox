@@ -76,6 +76,7 @@ class LoxCallableFunction(
         interpreter.environment.declare(func.parameters[i].lexeme, arguments[i])
       }
       interpreter.interpret(func.body)
+      if (isInitializer) return enclosure.getAt(0, "this")
     } catch (e: Return) {
       if (isInitializer) return enclosure.getAt(0, "this")
       return e.value
@@ -404,7 +405,8 @@ class Interpreter {
   private fun unaryOperation(operator: Token, right: Any?): Any {
     return when (operator.type) {
       TokenType.MINUS -> {
-        -checkNumericOperand(operator, right)
+        if (right is Double) return -right
+        throw RuntimeError(operator, "Operand must be a number.")
       }
       TokenType.BANG -> {
         !isTruthy(right)
