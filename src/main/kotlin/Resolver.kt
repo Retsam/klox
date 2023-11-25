@@ -172,7 +172,10 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
         expr.elseBranch?.let { resolve(it) }
       }
       is PrintStmt -> resolve(expr.expr)
-      is WhileStmt -> resolve(expr.body)
+      is WhileStmt -> {
+        resolve(expr.condition)
+        resolve(expr.body)
+      }
     }
   }
 }
