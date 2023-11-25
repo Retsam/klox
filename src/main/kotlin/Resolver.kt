@@ -52,7 +52,7 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
     // Not found. Assume it is global.
   }
 
-  private fun resolveFunction(expr: Function) {
+  private fun resolveFunction(expr: Function, type: FunctionType) {
     // The parameters are declared in the inner scope
     pushScope()
     expr.parameters.forEach {
@@ -60,10 +60,7 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
       define(it)
     }
     val prevFunction = currentFunction
-    currentFunction =
-        if (currentClass != ClassType.NONE)
-            if (expr.name.lexeme == "init") FunctionType.INITIALIZER else FunctionType.METHOD
-        else FunctionType.FUNCTION
+    currentFunction = type
     expr.body.forEach { resolve(it) }
     currentFunction = prevFunction
     popScope()
@@ -97,7 +94,7 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
         declare(expr.name)
         define(expr.name)
 
-        resolveFunction(expr)
+        resolveFunction(expr, FunctionType.FUNCTION)
       }
       is ReturnStmt -> {
         if (currentFunction == FunctionType.NONE) {
@@ -123,7 +120,9 @@ class Resolver(private val locals: MutableMap<Expr, Int>, program: List<Stmt>) {
 
         pushScope(Pair("this", true))
         for (method in expr.methods) {
-          resolveFunction(method)
+          resolveFunction(
+              method,
+              if (method.name.lexeme == "init") FunctionType.INITIALIZER else FunctionType.METHOD)
         }
         scopes.removeFirst()
         if (expr.superclass != null) scopes.removeFirst()
